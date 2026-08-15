@@ -11,12 +11,15 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
 #log div{padding:3px 2px;border-bottom:1px solid #e6dfcc}
 #log div:first-child{animation:fadein .4s}
 @keyframes fadein{from{background:#fff3c4}to{background:transparent}}
-#bank{display:flex;gap:6px;background:#f6f0e1;border-radius:10px;padding:8px 6px;justify-content:space-around;box-shadow:inset 0 1px 4px rgba(0,0,0,.15)}
-.card{--c:#888;width:46px;height:62px;border-radius:7px;position:relative;display:flex;align-items:center;justify-content:center;font-size:26px;background:linear-gradient(160deg,rgba(255,255,255,.4),rgba(255,255,255,0) 45%,rgba(0,0,0,.14)),var(--c);box-shadow:0 3px 5px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.55);text-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
-#hand .card:hover{transform:translateY(-4px)}
-.card .n{position:absolute;top:-7px;right:-7px;background:#1f2b3a;color:#fff;font-size:11px;font-weight:bold;border-radius:10px;padding:1px 6px;line-height:15px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-.card.dev{--c:#5b62c9;font-size:10px;color:#fff;text-align:center;font-weight:600;line-height:1.1;padding:2px;cursor:pointer;flex-direction:column;gap:2px;border:0;font-family:inherit}
-.card.dev em{font-style:normal;font-size:20px}
+#bank .card{width:48px;height:50px}#bank .card.dev{font-size:7px;padding-bottom:5px}
+#bank{display:flex;gap:4px;background:#f6f0e1;border-radius:10px;padding:8px 6px;justify-content:space-around;box-shadow:inset 0 1px 4px rgba(0,0,0,.15)}
+.card{flex:none;width:64px;height:66px;border-radius:7px;position:relative;display:flex;align-items:flex-end;justify-content:center;background:center/contain no-repeat;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4));transition:transform .15s;font-size:0}
+#hand .card+.card{margin-left:-20px}
+#hand .card:hover{transform:translateY(-6px);z-index:3}
+#hand .card .n{right:auto;left:-4px}
+.card .n{position:absolute;top:-7px;right:-4px;background:#1f2b3a;color:#fff;font-size:11px;font-weight:bold;border-radius:10px;padding:1px 6px;line-height:15px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.card.dev{font-size:9.5px;color:#3a2a10;text-align:center;font-weight:700;line-height:1;padding:0 6px 7px;cursor:pointer;border:0;font-family:inherit;letter-spacing:-.2px}
+.card.dev em{display:none}
 .card.dev.new,.card.dev:disabled{opacity:.5;cursor:default}
 .pl{background:#f6f0e1;border-radius:10px;padding:6px 8px;display:flex;align-items:center;gap:6px;border-left:6px solid;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .pl.cur{background:#fff8e0;box-shadow:0 0 0 2px #f4b400,0 0 12px rgba(244,180,0,.6)}
@@ -28,7 +31,7 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
 .stat.dv{background:#5b62c9;color:#fff}
 .stat.rc{background:#8e6dc7;color:#fff}
 #bottom{grid-column:1;grid-row:2;min-width:0;background:linear-gradient(#efe6d0,#dccfb2);display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:3px solid #b8a985;box-shadow:0 -3px 10px rgba(0,0,0,.2)}
-#hand{display:flex;gap:7px;flex:1;min-width:0;align-items:center;padding:6px 6px 0;overflow-x:auto;overflow-y:hidden}
+#hand{display:flex;gap:0;flex:1;min-width:0;align-items:center;padding:6px 6px 0;overflow-x:auto;overflow-y:hidden}
 #dice,#turn,#actions{flex:none}
 #dice{display:flex;gap:8px}
 .die{width:44px;height:44px;background:linear-gradient(#fff,#e8e8e8);border-radius:9px;box-shadow:0 3px 5px rgba(0,0,0,.4),inset 0 -2px 0 #bbb;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px;gap:1px}
@@ -117,7 +120,7 @@ const BOARDS={
   big:{rows:[3,4,5,6,5,4,3],tiles:{wood:6,brick:5,sheep:6,wheat:6,ore:5,desert:2},nums:[2,2,3,3,3,4,4,4,5,5,5,6,6,6,8,8,8,9,9,9,10,10,10,11,11,11,12,12],ports:['any','any','any','any','any','wood','brick','sheep','sheep','wheat','ore'],bank:24,dev:{knight:20,vp:5,road:3,plenty:3,mono:3},max:6}
 };
 const COST={road:{wood:1,brick:1},settle:{wood:1,brick:1,sheep:1,wheat:1},city:{wheat:2,ore:3},dev:{sheep:1,wheat:1,ore:1}};
-const NAME={knight:'Knight',vp:'Victory Point',road:'Road Building',plenty:'Year of Plenty',mono:'Monopoly'};
+const NAME={knight:'Knight',vp:'Victory Point',road:'Road Building',plenty:'Year of Plenty',mono:'Monopoly'},SHORT={knight:'Knight',vp:'VP',road:'Roads',plenty:'Plenty',mono:'Monopoly'};
 const DICE='⚀⚁⚂⚃⚄⚅';
 const S=50;
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -473,24 +476,21 @@ function renderBoard(){
   let s=`<svg viewBox="${G.view}">${DEFS}`;
   s+=`<g filter="url(#blur6)" opacity=".85">${G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.36)}" fill="#8fd4f2"/>`).join('')}</g>`;   // shallows (blurred → soft coast)
   s+=`<g filter="url(#blur2)">${G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.2)}" fill="#e9d59c"/>`).join('')}</g>`;               // sand
+  const TH=2*S*0.965*1.03,TW=TH*206/235;   // tile art size (pointy-top hex art incl. its border)
   for(const h of G.hexes){
-    const c=m==='robber'&&robberOK(h)?` class="hint" onclick="act('clickH',${h.id})"`:'';
-    s+=`<polygon points="${hexPts(h,S*0.965)}" fill="url(#g-${h.res})" stroke="${shade(COL[h.res],-.35)}" stroke-width="1.5"${c}/>`;
-    s+=`<polygon points="${hexPts(h,S*0.88)}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="3" pointer-events="none"/>`;   // bevel highlight
-    if(h.res!=='desert')s+=`<text x="${h.x}" y="${h.y-9}" text-anchor="middle" font-size="27"${c}>${ICON[h.res]}</text>`;
-    else s+=`<text x="${h.x}" y="${h.y+8}" text-anchor="middle" font-size="27">🌵</text>`;
+    s+=`<polygon points="${hexPts(h,S*0.965)}" fill="url(#g-${h.res})" stroke="${shade(COL[h.res],-.35)}" stroke-width="1.5"/>`;   // fallback under the art
+    s+=`<image href="assets/hex-${h.res}.png" x="${(h.x-TW/2).toFixed(1)}" y="${(h.y-TH/2).toFixed(1)}" width="${TW.toFixed(1)}" height="${TH.toFixed(1)}" pointer-events="none"/>`;
     if(h.num){
-      const red=h.num===6||h.num===8,pips=6-Math.abs(7-h.num),ink=red?'#c62828':'#2b2b2b',hot=tot===h.num&&h.id!==G.robber;
-      s+=`<circle cx="${h.x}" cy="${h.y+17}" r="15" fill="#f8efd6" stroke="${hot?'#ffb300':'#b59a5c'}" stroke-width="${hot?3:1}" filter="url(#sh)"${hot?' class="hot"':''}${c}/>`;
-      s+=`<text x="${h.x}" y="${h.y+21}" text-anchor="middle" font-size="${red?17:15}" font-weight="700" fill="${ink}"${c}>${h.num}</text>`;
-      for(let i=0;i<pips;i++)s+=`<circle cx="${h.x-(pips-1)*2.2+i*4.4}" cy="${h.y+27}" r="1.3" fill="${ink}"/>`;
+      const hot=tot===h.num&&h.id!==G.robber;
+      if(hot)s+=`<circle cx="${h.x}" cy="${h.y+18}" r="18" fill="none" stroke="#ffb300" stroke-width="4" class="hot"/>`;
+      s+=`<image href="assets/tok-${h.num}.png" x="${h.x-16}" y="${h.y+2}" width="32" height="32" filter="url(#sh)" pointer-events="none"/>`;
     }
   }
+  for(const h of G.hexes)if(m==='robber'&&robberOK(h))s+=`<polygon points="${hexPts(h,S*0.965)}" fill="#fff" fill-opacity=".45" stroke="#fff" stroke-width="2" class="hint" onclick="act('clickH',${h.id})"/>`;
   for(const e of G.edges)if(e.port){
     const [a,b]=e.v.map(i=>G.vertices[i]),h=G.hexes[e.hexes[0]],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-h.x,dy=my-h.y,d=Math.hypot(dx,dy),px=mx+dx/d*34,py=my+dy/d*34;
-    s+=`<line x1="${a.x}" y1="${a.y}" x2="${px}" y2="${py-6}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/><line x1="${b.x}" y1="${b.y}" x2="${px}" y2="${py-6}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/>`;
-    s+=`<text x="${px}" y="${py+2}" text-anchor="middle" font-size="26" filter="url(#sh)">⛵</text>`;
-    s+=`<rect x="${px-19}" y="${py+6}" width="38" height="16" rx="8" fill="#fff" stroke="#8a6d3b" filter="url(#sh)"/><text x="${px}" y="${py+18}" text-anchor="middle" font-size="10" font-weight="700" fill="#333">${e.port==='any'?'? 3:1':ICON[e.port]+' 2:1'}</text>`;
+    s+=`<line x1="${a.x}" y1="${a.y}" x2="${px}" y2="${py}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/><line x1="${b.x}" y1="${b.y}" x2="${px}" y2="${py}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/>`;
+    s+=`<image href="assets/port-${e.port}.png" x="${px-25}" y="${py-24}" width="50" height="48" filter="url(#sh)"/>`;
   }
   s+='<g filter="url(#sh)">';
   for(const e of G.edges){
@@ -500,7 +500,7 @@ function renderBoard(){
   }
   for(const v of G.vertices)if(v.owner!==null)s+=`<g${mark((v.city?'c':'v')+v.id)}>${(v.city?cityP:house)(v.x,v.y,G.players[v.owner].color)}</g>`;
   const rb=G.hexes[G.robber],moved=fresh&&lastRobber!==null&&lastRobber!==G.robber,ro=moved?G.hexes[lastRobber]:rb;
-  s+=`<g${moved?` class="slide" style="--dx:${(ro.x-rb.x).toFixed(1)}px;--dy:${(ro.y-rb.y).toFixed(1)}px"`:''}><g transform="translate(${rb.x+22},${rb.y+18})"><ellipse cx="0" cy="12" rx="9" ry="3.5" fill="#222" opacity=".6"/><path d="M-8,12 Q-8,1 -3.5,-2 L3.5,-2 Q8,1 8,12 Z" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/><circle cx="0" cy="-7" r="5.5" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/></g></g>`;
+  s+=`<g${moved?` class="slide" style="--dx:${(ro.x-rb.x).toFixed(1)}px;--dy:${(ro.y-rb.y).toFixed(1)}px"`:''}><ellipse cx="${rb.x+24}" cy="${rb.y+32}" rx="9" ry="3.5" fill="#222" opacity=".5"/><image href="assets/robber.png" x="${rb.x+13}" y="${rb.y-6}" width="22" height="39"/></g>`;
   s+='</g>';
   seenPieces=cur;seenGame=G.id;lastRobber=G.robber;
   for(const e of G.edges){
@@ -519,7 +519,7 @@ const av=p=>`<div class="av" style="background:${p.color}">${AVI[p.i]}<span clas
 function renderSide(){
   const p=P();
   let s=`<div id="log">${G.log.slice(-60).reverse().map(l=>`<div>${l}</div>`).join('')}</div>`;
-  s+=`<div id="bank"><div class="card dev" style="cursor:default"><em>🃏</em>Dev<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
+  s+=`<div id="bank"><div class="card dev" style="cursor:default;background-image:url(assets/dev-knight.png)">Dev cards<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" style="background-image:url(assets/card-${r}.png)">${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
   s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv" title="Development cards"><b>${o.dev.length+o.newDev.length}</b>🃏</div><div class="stat rc" title="Resource cards"><b>${count(o)}</b>🎴</div><div class="stat" title="Knights played"><b>${o.knights}</b>⚔️</div><div class="stat" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
   if(online)s+=`<div style="font-size:12px;text-align:center;opacity:.7">🌐 room ${esc(roomCode)}</div>`;
   s+=`<div style="display:flex;gap:6px"><button onclick="toggleMute()" title="${muted?'Unmute':'Mute'}" style="border-radius:6px;padding:6px 10px;cursor:pointer">${muted?'🔇':'🔊'}</button><button onclick="showStats()" title="Game stats" style="border-radius:6px;padding:6px 10px;cursor:pointer">📊</button>${!online||isHost?'<button onclick="start()" style="flex:1;border-radius:6px;padding:6px;cursor:pointer">New game</button>':''}</div>`;
@@ -536,11 +536,11 @@ function renderBottom(){
     m==='robber'?`${who}: move the robber — click a hex`:m==='road'?`${who}: click an edge for the road`:
     m==='freeroad'?`${who}: place ${G.free} free road(s)`:m==='settle'?`${who}: click a vertex for the settlement`:
     m==='city'?`${who}: click a settlement to upgrade`:G.rolled?`${who}: build, trade, or end turn`:`${who}: roll the dice`;
-  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
+  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" style="background-image:url(assets/card-${r}.png)" title="${r}"><span class="n">${h.res[r]}</span></div>`).join('');
   if(main){
-    s+=h.dev.map((c,i)=>`<button class="card dev" ${G.playedDev||busy||G.sbp?'disabled':''} onclick="act('playDev',${i})" title="Play ${NAME[c]}"><em>${DEVI[c]}</em>${NAME[c]}</button>`).join('');
-    s+=h.newDev.map(c=>`<div class="card dev new" title="Playable next turn"><em>${DEVI[c]}</em>${NAME[c]}</div>`).join('');
-    if(h.vpc)s+=`<div class="card dev" style="cursor:default"><em>🏆</em>Victory Point<span class="n">${h.vpc}</span></div>`;
+    s+=h.dev.map((c,i)=>`<button class="card dev" style="background-image:url(assets/dev-${c}.png)" ${G.playedDev||busy||G.sbp?'disabled':''} onclick="act('playDev',${i})" title="Play ${NAME[c]}">${SHORT[c]}</button>`).join('');
+    s+=h.newDev.map(c=>`<div class="card dev new" style="background-image:url(assets/dev-${c}.png)" title="Playable next turn (${NAME[c]})">${SHORT[c]}</div>`).join('');
+    if(h.vpc)s+=`<div class="card dev" style="cursor:default;background-image:url(assets/dev-vp.png)" title="Victory Point cards">VP<span class="n">${h.vpc}</span></div>`;
   }
   s+=`</div>`;
   if(G.dice){const key=G.cur+'-'+G.dice.join(''),shake=key!==lastDiceKey;lastDiceKey=key;s+=`<div id="dice">${G.dice.map(v=>die(v,shake)).join('')}</div>`}
@@ -676,7 +676,9 @@ function demo(){ // #demo: auto-play a few turns for a quick look at the board
     setMode('city');const v=first(G.vertices,v=>validCity(v,G.cur));if(v)clickV(v.id);else setMode(null);
     endTurn();
   }
-  roll();P().dev=['knight','road'];render();
+  roll();while(G.prompt&&G.prompt.t==='discard'){const q=G.players[G.prompt.p],sel={wood:0,brick:0,sheep:0,wheat:0,ore:0};let n=0;for(const r of RES)while(n<Math.floor(count(q)/2)&&sel[r]<q.res[r]){sel[r]++;n++}doDiscard(sel)}
+  if(G.mode==='robber'){clickH(first(G.hexes,robberOK).id);if(G.prompt)steal(G.prompt.victims[0])}
+  P().dev=['knight','road'];render();
   if(location.hash==='#demowin'){P().vpc=9;P().res.wood++;P().res.brick++;setMode('road');clickE(first(G.edges,e=>validRoad(e,G.cur,false)).id)}
 }
 location.hash==='#test'?selfTest():location.hash.startsWith('#demo')?demo():renderLobby();

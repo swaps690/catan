@@ -45,6 +45,8 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
 .act.go{background:linear-gradient(#ffe38a,#f6c93a);border-color:#c99a1a}
 .hint{cursor:pointer;animation:pulse 1.2s infinite}
 @keyframes pulse{50%{opacity:.35}}
+.fly{position:fixed;z-index:20;width:34px;height:46px;border-radius:5px;background:linear-gradient(160deg,rgba(255,255,255,.4),rgba(0,0,0,.12)),var(--c);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 10px rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.7);transform:translate(-50%,-50%);transition:left .75s cubic-bezier(.3,.7,.3,1),top .75s cubic-bezier(.3,.7,.3,1),transform .75s;pointer-events:none}
+.fly.back{--c:#3b4a8a;background:repeating-linear-gradient(45deg,#3b4a8a 0 4px,#4d5ea6 4px 8px)}
 .hot{animation:glow 1s infinite}
 @keyframes glow{50%{stroke-opacity:.15}}
 .drop{animation:drop .5s cubic-bezier(.2,.9,.3,1.2);transform-box:fill-box;transform-origin:center}
@@ -171,7 +173,7 @@ function newGame(seats,opts={friendly:true,balanced:false,hideBank:false,target:
     bank:{wood:B.bank,brick:B.bank,sheep:B.bank,wheat:B.bank,ore:B.bank},
     devDeck:shuffle(Object.entries(B.dev).flatMap(([c,n])=>Array(n).fill(c))),
     longest:{p:null,len:4},army:{p:null,n:2},log:[],winner:null,lastSettle:null,trade:null,tradeSeq:0,discardQ:[],prompt:null,
-    stats:{start:Date.now(),end:null,turns:0,rolls:Array(13).fill(0),p:seats.map(()=>({gained:0,lost:0,discarded:0,trades:0,dev:0}))}};
+    fx:[],fxSeq:0,stats:{start:Date.now(),end:null,turns:0,rolls:Array(13).fill(0),p:seats.map(()=>({gained:0,lost:0,discarded:0,trades:0,dev:0}))}};
   seats.forEach((s,i)=>G.players.push({i,name:s.name||s,color:s.color||PCOL[i],res:{wood:0,brick:0,sheep:0,wheat:0,ore:0},dev:[],newDev:[],knights:0,vpc:0,roads:15,settles:5,cities:4}));
   const ord=[...Array(seats.length).keys()];G.setupOrder=[...ord,...[...ord].reverse()];
   log(`Game start. ${pn(P())} places a settlement.`);
@@ -184,6 +186,8 @@ const count=p=>RES.reduce((s,r)=>s+p.res[r],0);
 const canPay=(p,c)=>RES.every(r=>p.res[r]>=(c[r]||0));
 const pay=(p,c)=>RES.forEach(r=>{p.res[r]-=(c[r]||0);G.bank[r]+=(c[r]||0)});
 const other=(e,vid)=>e.v[0]===vid?e.v[1]:e.v[0];
+// card-transfer effects: recorded in state, replayed by every client's render()
+const fx=(from,to,res,n=1)=>{if(!n)return;G.fx=G.fx||[];G.fx.push({id:++G.fxSeq,from,to,res,n});if(G.fx.length>40)G.fx.shift()};
 const vp=i=>{const p=G.players[i];return (5-p.settles)+2*(4-p.cities)+(G.longest.p===i?2:0)+(G.army.p===i?2:0)+p.vpc};
 
 function vertexFree(v){return v.owner===null&&v.edges.every(eid=>G.vertices[other(G.edges[eid],v.id)].owner===null)}
@@ -226,7 +230,7 @@ function clickV(id){
   if(m==='setup-settle'){
     if(!validSettle(v,G.cur,true))return;
     v.owner=G.cur;p.settles--;G.lastSettle=id;G.mode='setup-road';
-    if(G.setupIdx>=G.players.length)v.hexes.forEach(h=>{const r=G.hexes[h].res;if(r!=='desert'){p.res[r]++;G.bank[r]--}});
+    if(G.setupIdx>=G.players.length)v.hexes.forEach(h=>{const r=G.hexes[h].res;if(r!=='desert'){p.res[r]++;G.bank[r]--;fx('bank',G.cur,r)}});
     log(`${pn(p)} placed a settlement.`);
   }else if(m==='settle'){
     if(!validSettle(v,G.cur,false)||!canPay(p,COST.settle))return;
@@ -264,7 +268,7 @@ function clickH(id){
 function steal(o){if(!G.prompt||G.prompt.t!=='steal'||!G.prompt.victims.includes(o))return;G.prompt=null;doSteal(o);after()}
 function doSteal(o){
   const v=G.players[o],pool=RES.flatMap(r=>Array(v.res[r]).fill(r)),r=pool[Math.floor(Math.random()*pool.length)];
-  v.res[r]--;P().res[r]++;G.stats.p[o].lost++;log(`${pn(P())} stole a card from ${pn(v)}.`);
+  v.res[r]--;P().res[r]++;G.stats.p[o].lost++;fx(o,G.cur,'hidden');log(`${pn(P())} stole a card from ${pn(v)}.`);
 }
 function roll(){
   if(G.rolled||G.mode!==null||G.phase!=='main'||G.sbp)return;
@@ -279,7 +283,7 @@ function roll(){
   for(const r in want){
     const ps=Object.keys(want[r]),total=ps.reduce((s,k)=>s+want[r][k],0);
     if(total>G.bank[r]&&ps.length>1){log(`Bank is out of ${r} — nobody receives it.`);continue}
-    for(const k of ps){const n=Math.min(want[r][k],G.bank[r]);G.players[k].res[r]+=n;G.bank[r]-=n;G.stats.p[k].gained+=n;if(n)log(`${pn(G.players[k])} got ${ICON[r].repeat(n)}`)}
+    for(const k of ps){const n=Math.min(want[r][k],G.bank[r]);G.players[k].res[r]+=n;G.bank[r]-=n;G.stats.p[k].gained+=n;fx('bank',+k,r,n);if(n)log(`${pn(G.players[k])} got ${ICON[r].repeat(n)}`)}
   }
   render();
 }
@@ -291,7 +295,7 @@ function nextDiscard(){
 function doDiscard(sel){
   const p=G.players[G.discardQ[0]],need=Math.floor(count(p)/2);
   if(!sel||RES.reduce((s,r)=>s+(sel[r]|0),0)!==need||!RES.every(r=>(sel[r]|0)>=0&&(sel[r]|0)<=p.res[r]))return;
-  pay(p,sel);G.stats.p[p.i].discarded+=need;log(`${pn(p)} discarded ${need} cards.`);G.discardQ.shift();nextDiscard();
+  pay(p,sel);RES.forEach(r=>fx(p.i,'bank',r,sel[r]|0));G.stats.p[p.i].discarded+=need;log(`${pn(p)} discarded ${need} cards.`);G.discardQ.shift();nextDiscard();
 }
 function setMode(m){if(!G.rolled||G.prompt||![null,'road','settle','city','freeroad'].includes(m))return;if(G.mode!==null&&!['road','settle','city','freeroad'].includes(G.mode))return;G.mode=m;render()}
 function buyDev(){
@@ -312,13 +316,13 @@ function playDev(i){
   else if(c==='mono')G.prompt={t:'mono'};
   after();
 }
-function plenty(r){if(!G.prompt||G.prompt.t!=='plenty'||!G.bank[r])return;P().res[r]++;G.bank[r]--;log(`${pn(P())} took ${ICON[r]}.`);if(--G.prompt.n<=0)G.prompt=null;render()}
-function mono(r){if(!G.prompt||G.prompt.t!=='mono'||!RES.includes(r))return;let n=0;G.players.forEach(o=>{if(o!==P()){n+=o.res[r];P().res[r]+=o.res[r];o.res[r]=0}});G.prompt=null;log(`${pn(P())} monopolized ${r} (+${n}).`);render()}
+function plenty(r){if(!G.prompt||G.prompt.t!=='plenty'||!G.bank[r])return;P().res[r]++;G.bank[r]--;fx('bank',G.cur,r);log(`${pn(P())} took ${ICON[r]}.`);if(--G.prompt.n<=0)G.prompt=null;render()}
+function mono(r){if(!G.prompt||G.prompt.t!=='mono'||!RES.includes(r))return;let n=0;G.players.forEach(o=>{if(o!==P()){n+=o.res[r];fx(o.i,G.cur,r,o.res[r]);P().res[r]+=o.res[r];o.res[r]=0}});G.prompt=null;log(`${pn(P())} monopolized ${r} (+${n}).`);render()}
 function rate(p,r){let b=4;G.vertices.forEach(v=>{if(v.owner===p.i&&v.port){if(v.port==='any')b=Math.min(b,3);if(v.port===r)b=2}});return b}
 function doBank(g,r){
   const p=P(),n=rate(p,g);
   if(!G.rolled||G.mode!==null||G.sbp||!RES.includes(g)||!RES.includes(r)||g===r||p.res[g]<n||!G.bank[r])return;
-  p.res[g]-=n;G.bank[g]+=n;p.res[r]++;G.bank[r]--;log(`${pn(p)} traded ${n} ${ICON[g]} for 1 ${ICON[r]}.`);render();
+  p.res[g]-=n;G.bank[g]+=n;p.res[r]++;G.bank[r]--;fx(G.cur,'bank',g,n);fx('bank',G.cur,r);log(`${pn(p)} traded ${n} ${ICON[g]} for 1 ${ICON[r]}.`);render();
 }
 function propose(give,get){
   const p=P();if(!G.rolled||G.mode!==null||G.trade||G.sbp)return;
@@ -329,7 +333,7 @@ function propose(give,get){
 function accept(oi){
   const t=G.trade;if(!t||oi===t.from)return;const p=G.players[t.from],o=G.players[oi];
   if(!o||!canPay(p,t.give)||!canPay(o,t.get))return;
-  RES.forEach(r=>{p.res[r]+=t.get[r]-t.give[r];o.res[r]+=t.give[r]-t.get[r]});
+  RES.forEach(r=>{p.res[r]+=t.get[r]-t.give[r];o.res[r]+=t.give[r]-t.get[r];fx(t.from,oi,r,t.give[r]);fx(oi,t.from,r,t.get[r])});
   G.trade=null;G.stats.p[p.i].trades++;G.stats.p[o.i].trades++;log(`${pn(p)} traded with ${pn(o)}.`);render();
 }
 function cancelTrade(){G.trade=null;render()}
@@ -519,8 +523,8 @@ const av=p=>`<div class="av" style="background:${p.color}">${AVI[p.i]}<span clas
 function renderSide(){
   const p=P();
   let s=`<div id="log">${G.log.slice(-60).reverse().map(l=>`<div>${l}</div>`).join('')}</div>`;
-  s+=`<div id="bank"><div class="card dev" style="cursor:default"><em>🃏</em>Dev<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
-  s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv" title="Development cards"><b>${o.dev.length+o.newDev.length}</b>🃏</div><div class="stat rc" title="Resource cards"><b>${count(o)}</b>🎴</div><div class="stat" title="Knights played"><b>${o.knights}</b>⚔️</div><div class="stat" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
+  s+=`<div id="bank"><div class="card dev" style="cursor:default"><em>🃏</em>Dev<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" data-r="${r}" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
+  s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" data-i="${o.i}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv" title="Development cards"><b>${o.dev.length+o.newDev.length}</b>🃏</div><div class="stat rc" title="Resource cards"><b>${count(o)}</b>🎴</div><div class="stat" title="Knights played"><b>${o.knights}</b>⚔️</div><div class="stat" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
   if(online)s+=`<div style="font-size:12px;text-align:center;opacity:.7">🌐 room ${esc(roomCode)}</div>`;
   s+=`<div style="display:flex;gap:6px"><button onclick="toggleMute()" title="${muted?'Unmute':'Mute'}" style="border-radius:6px;padding:6px 10px;cursor:pointer">${muted?'🔇':'🔊'}</button><button onclick="showStats()" title="Game stats" style="border-radius:6px;padding:6px 10px;cursor:pointer">📊</button>${!online||isHost?'<button onclick="start()" style="flex:1;border-radius:6px;padding:6px;cursor:pointer">New game</button>':''}</div>`;
   $('side').innerHTML=s;
@@ -536,7 +540,7 @@ function renderBottom(){
     m==='robber'?`${who}: move the robber — click a hex`:m==='road'?`${who}: click an edge for the road`:
     m==='freeroad'?`${who}: place ${G.free} free road(s)`:m==='settle'?`${who}: click a vertex for the settlement`:
     m==='city'?`${who}: click a settlement to upgrade`:G.rolled?`${who}: build, trade, or end turn`:`${who}: roll the dice`;
-  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
+  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" data-r="${r}" style="--c:${CARD[r]}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
   if(main){
     s+=h.dev.map((c,i)=>`<button class="card dev" ${G.playedDev||busy||G.sbp?'disabled':''} onclick="act('playDev',${i})" title="Play ${NAME[c]}"><em>${DEVI[c]}</em>${NAME[c]}</button>`).join('');
     s+=h.newDev.map(c=>`<div class="card dev new" title="Playable next turn"><em>${DEVI[c]}</em>${NAME[c]}</div>`).join('');
@@ -646,7 +650,32 @@ function render(){
   const sm=stateModal(),key=sm?sm[0]:null;
   if(key!==modalKey){modalKey=key;if(key&&key.startsWith('discard'))discSel={wood:0,brick:0,sheep:0,wheat:0,ore:0};if(sm)modal(sm[1]);else closeModal()}
   else if(sm)modal(sm[1]);
+  playFx();
   if(isHost)broadcast({t:'state',G});
+}
+// ---------- card flight animation ----------
+let lastFx=0,fxGame=null;
+function anchor(who,r){
+  let el=null;
+  if(who==='bank')el=document.querySelector(`#bank .card[data-r="${r}"]`)||document.querySelector('#bank');
+  else{const mine=me===null?G.cur===who:me===who;if(mine)el=document.querySelector(`#hand .card[data-r="${r}"]`)||document.querySelector('#hand');if(!el)el=document.querySelector(`.pl[data-i="${who}"] .av`)}
+  if(!el)return null;const b=el.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2};
+}
+function playFx(){
+  const list=G.fx||[];
+  if(fxGame!==G.id){fxGame=G.id;lastFx=list.length?list[list.length-1].id:0;return}   // don't replay history on join/new game
+  let k=0;
+  for(const f of list){
+    if(f.id<=lastFx)continue;lastFx=f.id;
+    const a=anchor(f.from,f.res),b=anchor(f.to,f.res);if(!a||!b)continue;
+    for(let i=0;i<Math.min(f.n,6);i++,k++){
+      const d=document.createElement('div');d.className='fly'+(f.res==='hidden'?' back':'');
+      if(f.res!=='hidden'){d.style.setProperty('--c',CARD[f.res]);d.textContent=ICON[f.res]}
+      d.style.left=a.x+'px';d.style.top=a.y+'px';document.body.appendChild(d);
+      setTimeout(()=>{d.style.left=b.x+'px';d.style.top=b.y+'px';d.style.transform='translate(-50%,-50%) scale(.7) rotate(15deg)'},30+k*80);
+      setTimeout(()=>d.remove(),850+k*80);
+    }
+  }
 }
 
 // ---------- self-check: open index.html#test ----------

@@ -47,6 +47,10 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
 @keyframes pulse{50%{opacity:.35}}
 .hot{animation:glow 1s infinite}
 @keyframes glow{50%{stroke-opacity:.15}}
+.drop{animation:drop .5s cubic-bezier(.2,.9,.3,1.2);transform-box:fill-box;transform-origin:center}
+@keyframes drop{0%{transform:translateY(-40px) scale(1.6);opacity:0}70%{opacity:1}100%{transform:none}}
+.slide{animation:slide .55s cubic-bezier(.4,0,.2,1)}
+@keyframes slide{from{transform:translate(var(--dx),var(--dy))}to{transform:none}}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9}
 #modal>div{background:#f1eadb;padding:18px 22px;border-radius:12px;max-width:460px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #modal h3{margin:0 0 10px}
@@ -453,8 +457,11 @@ const DEFS=`<defs>
   <linearGradient id="g-rob" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a8a8a"/><stop offset="1" stop-color="#3a3a3a"/></linearGradient>
   ${Object.entries(COL).map(([r,c])=>`<linearGradient id="g-${r}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(c,.28)}"/><stop offset="1" stop-color="${shade(c,-.18)}"/></linearGradient>`).join('')}
 </defs>`;
+// placement animation: pieces not present at the previous render get a drop-in; the robber slides from its old hex
+let seenPieces=null,seenGame=null,lastRobber=null;
 function renderBoard(){
   const pi=G.cur,m=myTurn()&&!G.prompt?G.mode:null,roadMode=['road','setup-road','freeroad'].includes(m),tot=G.dice?G.dice[0]+G.dice[1]:0;
+  const fresh=seenPieces&&seenGame===G.id,cur=new Set(),mark=k=>{cur.add(k);return fresh&&!seenPieces.has(k)?' class="drop"':''};
   let s=`<svg viewBox="${G.view}">${DEFS}`;
   s+=`<g filter="url(#blur6)" opacity=".85">${G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.36)}" fill="#8fd4f2"/>`).join('')}</g>`;   // shallows (blurred → soft coast)
   s+=`<g filter="url(#blur2)">${G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.2)}" fill="#e9d59c"/>`).join('')}</g>`;               // sand
@@ -481,12 +488,13 @@ function renderBoard(){
   for(const e of G.edges){
     const [a,b]=e.v.map(i=>G.vertices[i]),dx=b.x-a.x,dy=b.y-a.y;
     if(e.owner!==null){const k=9/Math.hypot(dx,dy),x1=a.x+dx*k,y1=a.y+dy*k,x2=b.x-dx*k,y2=b.y-dy*k,c=G.players[e.owner].color;
-      s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="${shade(c,-.5)}" stroke-width="10"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="${c}" stroke-width="7"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>`}
+      s+=`<g${mark('e'+e.id)}><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="${shade(c,-.5)}" stroke-width="10"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="${c}" stroke-width="7"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="#fff" stroke-opacity=".3" stroke-width="2"/></g>`}
   }
-  for(const v of G.vertices)if(v.owner!==null)s+=(v.city?cityP:house)(v.x,v.y,G.players[v.owner].color);
-  const rb=G.hexes[G.robber];
-  s+=`<g transform="translate(${rb.x+22},${rb.y+18})"><ellipse cx="0" cy="12" rx="9" ry="3.5" fill="#222" opacity=".6"/><path d="M-8,12 Q-8,1 -3.5,-2 L3.5,-2 Q8,1 8,12 Z" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/><circle cx="0" cy="-7" r="5.5" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/></g>`;
+  for(const v of G.vertices)if(v.owner!==null)s+=`<g${mark((v.city?'c':'v')+v.id)}>${(v.city?cityP:house)(v.x,v.y,G.players[v.owner].color)}</g>`;
+  const rb=G.hexes[G.robber],moved=fresh&&lastRobber!==null&&lastRobber!==G.robber,ro=moved?G.hexes[lastRobber]:rb;
+  s+=`<g${moved?` class="slide" style="--dx:${(ro.x-rb.x).toFixed(1)}px;--dy:${(ro.y-rb.y).toFixed(1)}px"`:''}><g transform="translate(${rb.x+22},${rb.y+18})"><ellipse cx="0" cy="12" rx="9" ry="3.5" fill="#222" opacity=".6"/><path d="M-8,12 Q-8,1 -3.5,-2 L3.5,-2 Q8,1 8,12 Z" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/><circle cx="0" cy="-7" r="5.5" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/></g></g>`;
   s+='</g>';
+  seenPieces=cur;seenGame=G.id;lastRobber=G.robber;
   for(const e of G.edges){
     if(e.owner!==null||!roadMode||!validRoad(e,pi,m==='setup-road'))continue;
     const [a,b]=e.v.map(i=>G.vertices[i]);

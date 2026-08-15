@@ -3,40 +3,50 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#2f7fc4;color:#222;height:100vh;display:grid;grid-template-columns:1fr 330px;grid-template-rows:1fr 104px}
-#board{grid-column:1;grid-row:1;min-width:0;min-height:0}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;color:#222;height:100vh;display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:minmax(0,1fr) 108px}
+#board{grid-column:1;grid-row:1;min-width:0;min-height:0;background:radial-gradient(ellipse at 50% 45%,#5ab0ea 0%,#2f86cf 55%,#1f6db5 100%)}
 #board svg{width:100%;height:100%;display:block}
-#side{grid-column:2;grid-row:1/3;background:#d9d1bd;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:0;font-size:14px}
-#log{flex:1;min-height:0;overflow-y:auto;background:#f1eadb;border-radius:8px;padding:6px 8px;font-size:13px}
-#log div{padding:2px 0;border-bottom:1px solid #e0d8c6}
-#bank{display:flex;gap:6px;background:#f1eadb;border-radius:8px;padding:6px;justify-content:space-around}
-.card{width:44px;height:60px;border-radius:6px;position:relative;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 2px 3px rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.6)}
-.card .n{position:absolute;top:-6px;right:-6px;background:#26374a;color:#fff;font-size:11px;font-weight:bold;border-radius:9px;padding:1px 5px;line-height:14px}
-.card.dev{background:#5b62c9;font-size:11px;color:#fff;text-align:center;font-weight:600;line-height:1.1;padding:2px;cursor:pointer}
-.card.dev.new{opacity:.5;cursor:default}
-.card.dev:disabled{cursor:default;opacity:.5}
-.pl{background:#f1eadb;border-radius:8px;padding:6px 8px;display:flex;align-items:center;gap:8px;border-left:6px solid}
-.pl.cur{background:#fff8e6;box-shadow:0 0 0 2px #f4b400 inset}
-.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:18px;position:relative;flex:none;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+#side{grid-column:2;grid-row:1/3;background:linear-gradient(#cfc4a8,#bfb193);padding:8px;display:flex;flex-direction:column;gap:8px;min-height:0;font-size:14px;box-shadow:-3px 0 10px rgba(0,0,0,.25)}
+#log{flex:1;min-height:0;overflow-y:auto;background:#f6f0e1;border-radius:10px;padding:6px 8px;font-size:13px;box-shadow:inset 0 1px 4px rgba(0,0,0,.15)}
+#log div{padding:3px 2px;border-bottom:1px solid #e6dfcc}
+#log div:first-child{animation:fadein .4s}
+@keyframes fadein{from{background:#fff3c4}to{background:transparent}}
+#bank{display:flex;gap:6px;background:#f6f0e1;border-radius:10px;padding:8px 6px;justify-content:space-around;box-shadow:inset 0 1px 4px rgba(0,0,0,.15)}
+.card{--c:#888;width:46px;height:62px;border-radius:7px;position:relative;display:flex;align-items:center;justify-content:center;font-size:26px;background:linear-gradient(160deg,rgba(255,255,255,.4),rgba(255,255,255,0) 45%,rgba(0,0,0,.14)),var(--c);box-shadow:0 3px 5px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.55);text-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+#hand .card:hover{transform:translateY(-4px)}
+.card .n{position:absolute;top:-7px;right:-7px;background:#1f2b3a;color:#fff;font-size:11px;font-weight:bold;border-radius:10px;padding:1px 6px;line-height:15px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.card.dev{--c:#5b62c9;font-size:10px;color:#fff;text-align:center;font-weight:600;line-height:1.1;padding:2px;cursor:pointer;flex-direction:column;gap:2px;border:0;font-family:inherit}
+.card.dev em{font-style:normal;font-size:20px}
+.card.dev.new,.card.dev:disabled{opacity:.5;cursor:default}
+.pl{background:#f6f0e1;border-radius:10px;padding:6px 8px;display:flex;align-items:center;gap:6px;border-left:6px solid;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.pl.cur{background:#fff8e0;box-shadow:0 0 0 2px #f4b400,0 0 12px rgba(244,180,0,.6)}
+.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;flex:none;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .av .vp{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:#fff;color:#222;font-size:11px;font-weight:bold;border-radius:8px;padding:0 6px;border:1px solid #999}
-.pl .name{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stat{text-align:center;font-size:12px;line-height:1.1;min-width:32px}
-.stat b{font-size:15px;display:block}
-.stat.dv{background:#5b62c9;color:#fff;border-radius:5px;padding:2px 0}
-.stat.rc{background:#8e6dc7;color:#fff;border-radius:5px;padding:2px 0}
-#bottom{grid-column:1;grid-row:2;background:#e8dfc9;display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:3px solid #c9bd9f}
-#hand{display:flex;gap:10px;flex:1;align-items:center;padding-left:6px}
-#dice{display:flex;gap:6px;font-size:52px;line-height:1;color:#222}
-#turn{background:#f1eadb;border-radius:8px;padding:6px 12px;min-width:200px;text-align:center}
+.pl .name{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.stat{text-align:center;font-size:11px;line-height:1.1;width:34px;flex:none;border-radius:6px;padding:3px 0;background:#e9e2d0}
+.stat b{font-size:14px;display:block}
+.stat.dv{background:#5b62c9;color:#fff}
+.stat.rc{background:#8e6dc7;color:#fff}
+#bottom{grid-column:1;grid-row:2;min-width:0;background:linear-gradient(#efe6d0,#dccfb2);display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:3px solid #b8a985;box-shadow:0 -3px 10px rgba(0,0,0,.2)}
+#hand{display:flex;gap:7px;flex:1;min-width:0;align-items:center;padding:6px 6px 0;overflow-x:auto;overflow-y:hidden}
+#dice,#turn,#actions{flex:none}
+#dice{display:flex;gap:8px}
+.die{width:44px;height:44px;background:linear-gradient(#fff,#e8e8e8);border-radius:9px;box-shadow:0 3px 5px rgba(0,0,0,.4),inset 0 -2px 0 #bbb;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px;gap:1px}
+.die i{width:8px;height:8px;border-radius:50%;background:#222;place-self:center}
+.die.shake{animation:shake .5s}
+@keyframes shake{0%{transform:rotate(-20deg) translateY(-10px)}40%{transform:rotate(15deg)}70%{transform:rotate(-8deg)}100%{transform:none}}
+#turn{background:#f6f0e1;border-radius:10px;padding:6px 10px;min-width:180px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 #turn small{display:block;font-size:12px;color:#555}
 #actions{display:flex;gap:6px}
-.act{width:60px;height:64px;border-radius:8px;border:2px solid #7f9db9;background:#dfe9f2;font-size:26px;cursor:pointer;position:relative;padding:0}
-.act:hover:not(:disabled){background:#fff}
-.act:disabled{opacity:.35;cursor:default}
-.act .n{position:absolute;top:-6px;right:-6px;background:#26374a;color:#fff;font-size:11px;border-radius:9px;padding:1px 5px}
-.act.go{background:#ffd76a;border-color:#c99a1a}
+.act{width:54px;height:62px;border-radius:10px;border:2px solid #7f9db9;background:linear-gradient(#f4f8fc,#d5e2ee);font-size:23px;cursor:pointer;position:relative;padding:0;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s}
+.act:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.3);background:#fff}
+.act:disabled{opacity:.35;cursor:default;box-shadow:none}
+.act .n{position:absolute;top:-6px;right:-6px;background:#1f2b3a;color:#fff;font-size:11px;border-radius:9px;padding:1px 5px}
+.act.go{background:linear-gradient(#ffe38a,#f6c93a);border-color:#c99a1a}
 .hint{cursor:pointer;animation:pulse 1.2s infinite}
 @keyframes pulse{50%{opacity:.35}}
+.hot{animation:glow 1s infinite}
+@keyframes glow{50%{stroke-opacity:.15}}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9}
 #modal>div{background:#f1eadb;padding:18px 22px;border-radius:12px;max-width:460px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #modal h3{margin:0 0 10px}
@@ -425,56 +435,76 @@ function startGame(){
 function start(){if(online&&!isHost)return;inLobby=true;if(isHost)broadcastLobby();renderLobby()}
 
 // ---------- render ----------
-let modalKey=null,discSel=null,declined=0,winClosed=false,lastCur=-1,turnStart=Date.now();
+let modalKey=null,discSel=null,declined=0,winClosed=false,lastCur=-1,turnStart=Date.now(),lastDiceKey='';
+const PIPS={1:[5],2:[3,7],3:[3,5,7],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+const die=(v,shake)=>`<div class="die${shake?' shake':''}">${[1,2,3,4,5,6,7,8,9].map(i=>`<i style="visibility:${PIPS[v].includes(i)?'visible':'hidden'}"></i>`).join('')}</div>`;
 const modal=h=>{$('mbody').innerHTML=h;$('modal').style.display='flex'};
 const closeModal=()=>$('modal').style.display='none';
 const clock=()=>{const s=Math.floor((Date.now()-turnStart)/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 setInterval(()=>{const c=$('clock');if(c&&G&&G.winner===null)c.textContent=clock()},1000);
 const hexPts=(h,s=S)=>[...Array(6)].map((_,k)=>{const a=Math.PI/180*(60*k+30);return (h.x+s*Math.cos(a)).toFixed(1)+','+(h.y+s*Math.sin(a)).toFixed(1)}).join(' ');
-const house=(x,y,c)=>`<path d="M${x-8},${y+8}v-10l8,-8l8,8v10z" fill="${c}" stroke="#222" stroke-width="1.5" stroke-linejoin="round"/>`;
-const cityP=(x,y,c)=>`<path d="M${x-12},${y+9}v-12l6,-7l6,7v2h12v10z" fill="${c}" stroke="#222" stroke-width="1.5" stroke-linejoin="round"/>`;
+const house=(x,y,c)=>`<g transform="translate(${x},${y})" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"><path d="M-8,9v-9h16v9z" fill="${c}"/><path d="M-10,0L0,-10L10,0z" fill="${shade(c,-.35)}"/></g>`;
+const cityP=(x,y,c)=>`<g transform="translate(${x},${y})" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"><path d="M-13,10v-9h26v9z" fill="${c}"/><path d="M-13,1v-9h12v9z" fill="${c}"/><path d="M-14,-8L-7,-15L0,-8z" fill="${shade(c,-.35)}"/><path d="M0,1v-6h13v6z" fill="${shade(c,-.15)}"/></g>`;
+const shade=(hex,a)=>{const n=parseInt(hex.slice(1),16),m=c=>Math.round(a>0?c+(255-c)*a:c*(1+a));return '#'+[n>>16,n>>8&255,n&255].map(c=>m(c).toString(16).padStart(2,'0')).join('')};
+const DEFS=`<defs>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.3" flood-opacity=".45"/></filter>
+  <filter id="blur6" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="blur2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>
+  <linearGradient id="g-rob" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a8a8a"/><stop offset="1" stop-color="#3a3a3a"/></linearGradient>
+  ${Object.entries(COL).map(([r,c])=>`<linearGradient id="g-${r}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(c,.28)}"/><stop offset="1" stop-color="${shade(c,-.18)}"/></linearGradient>`).join('')}
+</defs>`;
 function renderBoard(){
-  const pi=G.cur,m=myTurn()&&!G.prompt?G.mode:null,roadMode=['road','setup-road','freeroad'].includes(m);
-  let s=`<svg viewBox="${G.view}">`;
-  s+=G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.34)}" fill="#8fd0ee"/>`).join('');
-  s+=G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.2)}" fill="#ecd9a2"/>`).join('');
+  const pi=G.cur,m=myTurn()&&!G.prompt?G.mode:null,roadMode=['road','setup-road','freeroad'].includes(m),tot=G.dice?G.dice[0]+G.dice[1]:0;
+  let s=`<svg viewBox="${G.view}">${DEFS}`;
+  s+=`<g filter="url(#blur6)" opacity=".85">${G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.36)}" fill="#8fd4f2"/>`).join('')}</g>`;   // shallows (blurred → soft coast)
+  s+=`<g filter="url(#blur2)">${G.hexes.map(h=>`<polygon points="${hexPts(h,S*1.2)}" fill="#e9d59c"/>`).join('')}</g>`;               // sand
   for(const h of G.hexes){
     const c=m==='robber'&&robberOK(h)?` class="hint" onclick="act('clickH',${h.id})"`:'';
-    s+=`<polygon points="${hexPts(h,S*0.96)}" fill="${COL[h.res]}" stroke="#d9c58a" stroke-width="3"${c}/>`;
-    if(h.res!=='desert')s+=`<text x="${h.x}" y="${h.y-8}" text-anchor="middle" font-size="26"${c}>${ICON[h.res]}</text>`;
-    else s+=`<text x="${h.x}" y="${h.y+8}" text-anchor="middle" font-size="26">🌵</text>`;
+    s+=`<polygon points="${hexPts(h,S*0.965)}" fill="url(#g-${h.res})" stroke="${shade(COL[h.res],-.35)}" stroke-width="1.5"${c}/>`;
+    s+=`<polygon points="${hexPts(h,S*0.88)}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="3" pointer-events="none"/>`;   // bevel highlight
+    if(h.res!=='desert')s+=`<text x="${h.x}" y="${h.y-9}" text-anchor="middle" font-size="27"${c}>${ICON[h.res]}</text>`;
+    else s+=`<text x="${h.x}" y="${h.y+8}" text-anchor="middle" font-size="27">🌵</text>`;
     if(h.num){
-      const red=h.num===6||h.num===8,pips=6-Math.abs(7-h.num);
-      s+=`<rect x="${h.x-15}" y="${h.y+2}" width="30" height="30" rx="6" fill="#fbf7ea" stroke="#c9b98a"${c}/><text x="${h.x}" y="${h.y+21}" text-anchor="middle" font-size="16" font-weight="bold" fill="${red?'#c62828':'#1b3a1b'}"${c}>${h.num}</text>`;
-      for(let i=0;i<pips;i++)s+=`<circle cx="${h.x-(pips-1)*2.2+i*4.4}" cy="${h.y+27.5}" r="1.4" fill="${red?'#c62828':'#1b3a1b'}"/>`;
+      const red=h.num===6||h.num===8,pips=6-Math.abs(7-h.num),ink=red?'#c62828':'#2b2b2b',hot=tot===h.num&&h.id!==G.robber;
+      s+=`<circle cx="${h.x}" cy="${h.y+17}" r="15" fill="#f8efd6" stroke="${hot?'#ffb300':'#b59a5c'}" stroke-width="${hot?3:1}" filter="url(#sh)"${hot?' class="hot"':''}${c}/>`;
+      s+=`<text x="${h.x}" y="${h.y+21}" text-anchor="middle" font-size="${red?17:15}" font-weight="700" fill="${ink}"${c}>${h.num}</text>`;
+      for(let i=0;i<pips;i++)s+=`<circle cx="${h.x-(pips-1)*2.2+i*4.4}" cy="${h.y+27}" r="1.3" fill="${ink}"/>`;
     }
   }
   for(const e of G.edges)if(e.port){
-    const [a,b]=e.v.map(i=>G.vertices[i]),h=G.hexes[e.hexes[0]],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-h.x,dy=my-h.y,d=Math.hypot(dx,dy),px=mx+dx/d*32,py=my+dy/d*32;
-    s+=`<line x1="${a.x}" y1="${a.y}" x2="${px}" y2="${py}" stroke="#a5763b" stroke-width="5" stroke-dasharray="4 3"/><line x1="${b.x}" y1="${b.y}" x2="${px}" y2="${py}" stroke="#a5763b" stroke-width="5" stroke-dasharray="4 3"/>`;
-    s+=`<rect x="${px-16}" y="${py-17}" width="32" height="34" rx="7" fill="#fff" stroke="#8a6d3b" stroke-width="1.5"/><text x="${px}" y="${py-2}" text-anchor="middle" font-size="${e.port==='any'?14:13}" font-weight="bold">${e.port==='any'?'?':ICON[e.port]}</text><text x="${px}" y="${py+12}" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">${e.port==='any'?'3:1':'2:1'}</text>`;
+    const [a,b]=e.v.map(i=>G.vertices[i]),h=G.hexes[e.hexes[0]],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-h.x,dy=my-h.y,d=Math.hypot(dx,dy),px=mx+dx/d*34,py=my+dy/d*34;
+    s+=`<line x1="${a.x}" y1="${a.y}" x2="${px}" y2="${py-6}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/><line x1="${b.x}" y1="${b.y}" x2="${px}" y2="${py-6}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/>`;
+    s+=`<text x="${px}" y="${py+2}" text-anchor="middle" font-size="26" filter="url(#sh)">⛵</text>`;
+    s+=`<rect x="${px-19}" y="${py+6}" width="38" height="16" rx="8" fill="#fff" stroke="#8a6d3b" filter="url(#sh)"/><text x="${px}" y="${py+18}" text-anchor="middle" font-size="10" font-weight="700" fill="#333">${e.port==='any'?'? 3:1':ICON[e.port]+' 2:1'}</text>`;
   }
+  s+='<g filter="url(#sh)">';
   for(const e of G.edges){
-    const [a,b]=e.v.map(i=>G.vertices[i]),dx=b.x-a.x,dy=b.y-a.y,L=`stroke-linecap="round"`;
-    if(e.owner!==null){const k=9/Math.hypot(dx,dy),x1=a.x+dx*k,y1=a.y+dy*k,x2=b.x-dx*k,y2=b.y-dy*k;
-      s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${L} stroke="#222" stroke-width="10"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${L} stroke="${G.players[e.owner].color}" stroke-width="7"/>`}
-    else if(roadMode&&validRoad(e,pi,m==='setup-road'))s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" ${L} stroke="#fff" stroke-opacity=".7" stroke-width="10" class="hint" onclick="act('clickE',${e.id})"/>`;
+    const [a,b]=e.v.map(i=>G.vertices[i]),dx=b.x-a.x,dy=b.y-a.y;
+    if(e.owner!==null){const k=9/Math.hypot(dx,dy),x1=a.x+dx*k,y1=a.y+dy*k,x2=b.x-dx*k,y2=b.y-dy*k,c=G.players[e.owner].color;
+      s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="${shade(c,-.5)}" stroke-width="10"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="${c}" stroke-width="7"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-linecap="round" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>`}
+  }
+  for(const v of G.vertices)if(v.owner!==null)s+=(v.city?cityP:house)(v.x,v.y,G.players[v.owner].color);
+  const rb=G.hexes[G.robber];
+  s+=`<g transform="translate(${rb.x+22},${rb.y+18})"><ellipse cx="0" cy="12" rx="9" ry="3.5" fill="#222" opacity=".6"/><path d="M-8,12 Q-8,1 -3.5,-2 L3.5,-2 Q8,1 8,12 Z" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/><circle cx="0" cy="-7" r="5.5" fill="url(#g-rob)" stroke="#222" stroke-width="1.2"/></g>`;
+  s+='</g>';
+  for(const e of G.edges){
+    if(e.owner!==null||!roadMode||!validRoad(e,pi,m==='setup-road'))continue;
+    const [a,b]=e.v.map(i=>G.vertices[i]);
+    s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke-linecap="round" stroke="#fff" stroke-opacity=".75" stroke-width="10" class="hint" onclick="act('clickE',${e.id})"/>`;
   }
   for(const v of G.vertices){
-    if(v.owner!==null)s+=(v.city?cityP:house)(v.x,v.y,G.players[v.owner].color);
-    else if((m==='settle'&&validSettle(v,pi,false))||(m==='setup-settle'&&validSettle(v,pi,true)))s+=`<circle cx="${v.x}" cy="${v.y}" r="10" fill="#fff" fill-opacity=".75" stroke="#333" class="hint" onclick="act('clickV',${v.id})"/>`;
+    if(v.owner===null&&((m==='settle'&&validSettle(v,pi,false))||(m==='setup-settle'&&validSettle(v,pi,true))))s+=`<circle cx="${v.x}" cy="${v.y}" r="10" fill="#fff" fill-opacity=".8" stroke="#333" class="hint" onclick="act('clickV',${v.id})"/>`;
     if(m==='city'&&validCity(v,pi))s+=`<circle cx="${v.x}" cy="${v.y}" r="15" fill="none" stroke="#fff" stroke-width="4" class="hint" onclick="act('clickV',${v.id})"/>`;
   }
-  const rb=G.hexes[G.robber];
-  s+=`<ellipse cx="${rb.x+22}" cy="${rb.y+22}" rx="8" ry="10" fill="#6b6b6b" stroke="#333" stroke-width="1.5"/><circle cx="${rb.x+22}" cy="${rb.y+8}" r="6" fill="#8a8a8a" stroke="#333" stroke-width="1.5"/>`;
   $('board').innerHTML=s+'</svg>';
 }
-const av=p=>`<div class="av" style="background:${p.color}">${esc(p.name[0]||'?').toUpperCase()}<span class="vp">${vp(p.i)}</span></div>`;
+const AVI=['🦊','🐻','🐸','🐼','🦉','🐯'],DEVI={knight:'⚔️',vp:'🏆',road:'🛤️',plenty:'🎁',mono:'🧲'};
+const av=p=>`<div class="av" style="background:${p.color}">${AVI[p.i]}<span class="vp">${vp(p.i)}</span></div>`;
 function renderSide(){
   const p=P();
   let s=`<div id="log">${G.log.slice(-60).reverse().map(l=>`<div>${l}</div>`).join('')}</div>`;
-  s+=`<div id="bank"><div class="card" style="background:#5b62c9;font-size:11px;color:#fff;font-weight:600;text-align:center;line-height:1.1">Dev<br>cards<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" style="background:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
-  s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' (you)':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv"><b>${o.dev.length+o.newDev.length}</b>dev</div><div class="stat rc"><b>${count(o)}</b>cards</div><div class="stat"><b>${o.knights}</b>⚔️</div><div class="stat"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
+  s+=`<div id="bank"><div class="card dev" style="cursor:default"><em>🃏</em>Dev<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
+  s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv" title="Development cards"><b>${o.dev.length+o.newDev.length}</b>🃏</div><div class="stat rc" title="Resource cards"><b>${count(o)}</b>🎴</div><div class="stat" title="Knights played"><b>${o.knights}</b>⚔️</div><div class="stat" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
   if(online)s+=`<div style="font-size:12px;text-align:center;opacity:.7">🌐 room ${esc(roomCode)}</div>`;
   s+=`<div style="display:flex;gap:6px"><button onclick="toggleMute()" title="${muted?'Unmute':'Mute'}" style="border-radius:6px;padding:6px 10px;cursor:pointer">${muted?'🔇':'🔊'}</button>${!online||isHost?'<button onclick="start()" style="flex:1;border-radius:6px;padding:6px;cursor:pointer">New game</button>':''}</div>`;
   $('side').innerHTML=s;
@@ -490,14 +520,14 @@ function renderBottom(){
     m==='robber'?`${who}: move the robber — click a hex`:m==='road'?`${who}: click an edge for the road`:
     m==='freeroad'?`${who}: place ${G.free} free road(s)`:m==='settle'?`${who}: click a vertex for the settlement`:
     m==='city'?`${who}: click a settlement to upgrade`:G.rolled?`${who}: build, trade, or end turn`:`${who}: roll the dice`;
-  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" style="background:${CARD[r]}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
+  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
   if(main){
-    s+=h.dev.map((c,i)=>`<button class="card dev" ${G.playedDev||busy||G.sbp?'disabled':''} onclick="act('playDev',${i})" title="Play ${NAME[c]}">${NAME[c]}</button>`).join('');
-    s+=h.newDev.map(c=>`<div class="card dev new" title="Playable next turn">${NAME[c]}</div>`).join('');
-    if(h.vpc)s+=`<div class="card dev" style="cursor:default">Victory Point<span class="n">${h.vpc}</span></div>`;
+    s+=h.dev.map((c,i)=>`<button class="card dev" ${G.playedDev||busy||G.sbp?'disabled':''} onclick="act('playDev',${i})" title="Play ${NAME[c]}"><em>${DEVI[c]}</em>${NAME[c]}</button>`).join('');
+    s+=h.newDev.map(c=>`<div class="card dev new" title="Playable next turn"><em>${DEVI[c]}</em>${NAME[c]}</div>`).join('');
+    if(h.vpc)s+=`<div class="card dev" style="cursor:default"><em>🏆</em>Victory Point<span class="n">${h.vpc}</span></div>`;
   }
   s+=`</div>`;
-  if(G.dice)s+=`<div id="dice"><span>${DICE[G.dice[0]-1]}</span><span>${DICE[G.dice[1]-1]}</span></div>`;
+  if(G.dice){const key=G.cur+'-'+G.dice.join(''),shake=key!==lastDiceKey;lastDiceKey=key;s+=`<div id="dice">${G.dice.map(v=>die(v,shake)).join('')}</div>`}
   s+=`<div id="turn"><b style="color:${p.color}">${G.sbp?'🔨 '+esc(p.name)+' builds':esc(p.name)+"'s turn"}</b> <span id="clock" style="font-variant-numeric:tabular-nums;color:#555">${clock()}</span><small>${status}</small></div>`;
   if(main){
     const can=k=>G.rolled&&!busy&&canPay(p,COST[k]),ok=G.rolled&&!busy,tr=ok&&!G.sbp;
@@ -609,6 +639,20 @@ function selfTest(){
   console.assert(big.hexes.length===30&&big.edges.filter(e=>e.port).length===11&&big.hexes.filter(h=>h.num).length===28,'big board');
   alert('self-test done — check console for failures');
 }
-location.hash==='#test'?selfTest():renderLobby();
+function demo(){ // #demo: auto-play a few turns for a quick look at the board
+  newGame(['Ann','Bob','Cy','Dan'].map((n,i)=>({name:n,color:PCOL[i]})));
+  const first=(a,f)=>a.find(f);
+  for(let i=0;i<8;i++){clickV(first(G.vertices,v=>validSettle(v,G.cur,true)).id);clickE(first(G.edges,e=>validRoad(e,G.cur,true)).id)}
+  for(let t=0;t<12;t++){
+    roll();while(G.prompt&&G.prompt.t==='discard'){const q=G.players[G.prompt.p],sel={wood:0,brick:0,sheep:0,wheat:0,ore:0};let n=0;for(const r of RES)while(n<Math.floor(count(q)/2)&&sel[r]<q.res[r]){sel[r]++;n++}doDiscard(sel)}
+    if(G.mode==='robber'){clickH(first(G.hexes,robberOK).id);if(G.prompt)steal(G.prompt.victims[0])}
+    const p=P();p.res.wood+=2;p.res.brick+=2;p.res.wheat+=2;p.res.ore+=3;
+    setMode('road');const e=first(G.edges,e=>validRoad(e,G.cur,false));if(e)clickE(e.id);else setMode(null);
+    setMode('city');const v=first(G.vertices,v=>validCity(v,G.cur));if(v)clickV(v.id);else setMode(null);
+    endTurn();
+  }
+  roll();P().dev=['knight','road'];render();
+}
+location.hash==='#test'?selfTest():location.hash==='#demo'?demo():renderLobby();
 </script>
 </body></html>

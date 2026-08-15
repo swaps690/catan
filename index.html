@@ -488,8 +488,9 @@ function renderBoard(){
   }
   for(const e of G.edges)if(e.port){
     const [a,b]=e.v.map(i=>G.vertices[i]),h=G.hexes[e.hexes[0]],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-h.x,dy=my-h.y,d=Math.hypot(dx,dy),px=mx+dx/d*34,py=my+dy/d*34;
-    s+=`<line x1="${a.x}" y1="${a.y}" x2="${px}" y2="${py}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/><line x1="${b.x}" y1="${b.y}" x2="${px}" y2="${py}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/>`;
-    s+=`<image href="assets/port-${e.port}.png" x="${px-25}" y="${py-24}" width="50" height="48" filter="url(#sh)"/>`;
+    s+=`<line x1="${a.x}" y1="${a.y}" x2="${px}" y2="${py-6}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/><line x1="${b.x}" y1="${b.y}" x2="${px}" y2="${py-6}" stroke="#8d6a3a" stroke-width="5" stroke-dasharray="4 3"/>`;
+    s+=`<text x="${px}" y="${py+2}" text-anchor="middle" font-size="26" filter="url(#sh)">⛵</text>`;
+    s+=`<rect x="${px-19}" y="${py+6}" width="38" height="16" rx="8" fill="#fff" stroke="#8a6d3b" filter="url(#sh)"/><text x="${px}" y="${py+18}" text-anchor="middle" font-size="10" font-weight="700" fill="#333">${e.port==='any'?'? 3:1':ICON[e.port]+' 2:1'}</text>`;
   }
   s+='<g filter="url(#sh)">';
   for(const e of G.edges){
@@ -675,9 +676,7 @@ function demo(){ // #demo: auto-play a few turns for a quick look at the board
     setMode('city');const v=first(G.vertices,v=>validCity(v,G.cur));if(v)clickV(v.id);else setMode(null);
     endTurn();
   }
-  roll();while(G.prompt&&G.prompt.t==='discard'){const q=G.players[G.prompt.p],sel={wood:0,brick:0,sheep:0,wheat:0,ore:0};let n=0;for(const r of RES)while(n<Math.floor(count(q)/2)&&sel[r]<q.res[r]){sel[r]++;n++}doDiscard(sel)}
-  if(G.mode==='robber'){clickH(first(G.hexes,robberOK).id);if(G.prompt)steal(G.prompt.victims[0])}
-  P().dev=['knight','road'];render();
+  roll();P().dev=['knight','road'];render();
   if(location.hash==='#demowin'){P().vpc=9;P().res.wood++;P().res.brick++;setMode('road');clickE(first(G.edges,e=>validRoad(e,G.cur,false)).id)}
 }
 location.hash==='#test'?selfTest():location.hash.startsWith('#demo')?demo():renderLobby();

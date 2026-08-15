@@ -52,7 +52,13 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
 .slide{animation:slide .55s cubic-bezier(.4,0,.2,1)}
 @keyframes slide{from{transform:translate(var(--dx),var(--dy))}to{transform:none}}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9}
-#modal>div{background:#f1eadb;padding:18px 22px;border-radius:12px;max-width:460px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#modal>div{background:#f1eadb;padding:18px 22px;border-radius:12px;max-width:720px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.stats{border-collapse:collapse;font-size:13px;width:100%}
+.stats td,.stats th{padding:4px 7px;text-align:center;border-bottom:1px solid #ddd3bd}
+.stats tr.w{background:#fff3c4}
+.hist{display:flex;gap:6px;align-items:flex-end;justify-content:center;margin-top:12px}
+.hist div{display:flex;flex-direction:column;align-items:center;font-size:11px;width:24px}
+.hist i{display:block;width:16px;border-radius:3px 3px 0 0;margin:2px 0}
 #modal h3{margin:0 0 10px}
 #modal button{padding:6px 12px;margin:3px;border-radius:6px;border:1px solid #999;background:#fff;cursor:pointer;font-size:14px}
 #modal button:disabled{opacity:.4;cursor:default}
@@ -164,7 +170,8 @@ function newGame(seats,opts={friendly:true,balanced:false,hideBank:false,target:
   G={...makeBoard(opts.board||'base'),id:Math.random().toString(36).slice(2),opts,diceDeck:[],players:[],cur:0,phase:'setup',setupIdx:0,mode:'setup-settle',dice:null,rolled:false,playedDev:false,free:0,
     bank:{wood:B.bank,brick:B.bank,sheep:B.bank,wheat:B.bank,ore:B.bank},
     devDeck:shuffle(Object.entries(B.dev).flatMap(([c,n])=>Array(n).fill(c))),
-    longest:{p:null,len:4},army:{p:null,n:2},log:[],winner:null,lastSettle:null,trade:null,tradeSeq:0,discardQ:[],prompt:null};
+    longest:{p:null,len:4},army:{p:null,n:2},log:[],winner:null,lastSettle:null,trade:null,tradeSeq:0,discardQ:[],prompt:null,
+    stats:{start:Date.now(),end:null,turns:0,rolls:Array(13).fill(0),p:seats.map(()=>({gained:0,lost:0,discarded:0,trades:0,dev:0}))}};
   seats.forEach((s,i)=>G.players.push({i,name:s.name||s,color:s.color||PCOL[i],res:{wood:0,brick:0,sheep:0,wheat:0,ore:0},dev:[],newDev:[],knights:0,vpc:0,roads:15,settles:5,cities:4}));
   const ord=[...Array(seats.length).keys()];G.setupOrder=[...ord,...[...ord].reverse()];
   log(`Game start. ${pn(P())} places a settlement.`);
@@ -207,8 +214,9 @@ function updateLongest(){
   if(p!==G.longest.p)log(p===null?'Longest Road is lost.':`${pn(G.players[p])} takes 🛣️ Longest Road (${max}).`);
   G.longest={p,len:p===null?4:lens[p]};
 }
+function declareWin(i){G.winner=i;G.stats.end=Date.now();log(`🏆 ${pn(G.players[i])} wins!`)}
 function after(){
-  if(G.winner===null&&G.phase==='main'&&!G.sbp&&vp(G.cur)>=G.opts.target){G.winner=G.cur;log(`🏆 ${pn(P())} wins!`)}
+  if(G.winner===null&&G.phase==='main'&&!G.sbp&&vp(G.cur)>=G.opts.target)declareWin(G.cur);
   render();
 }
 
@@ -256,7 +264,7 @@ function clickH(id){
 function steal(o){if(!G.prompt||G.prompt.t!=='steal'||!G.prompt.victims.includes(o))return;G.prompt=null;doSteal(o);after()}
 function doSteal(o){
   const v=G.players[o],pool=RES.flatMap(r=>Array(v.res[r]).fill(r)),r=pool[Math.floor(Math.random()*pool.length)];
-  v.res[r]--;P().res[r]++;log(`${pn(P())} stole a card from ${pn(v)}.`);
+  v.res[r]--;P().res[r]++;G.stats.p[o].lost++;log(`${pn(P())} stole a card from ${pn(v)}.`);
 }
 function roll(){
   if(G.rolled||G.mode!==null||G.phase!=='main'||G.sbp)return;
@@ -264,14 +272,14 @@ function roll(){
   if(G.opts.balanced){if(!G.diceDeck.length)G.diceDeck=shuffle([1,2,3,4,5,6].flatMap(a=>[1,2,3,4,5,6].map(b=>[a,b])));d=G.diceDeck.pop()}
   else d=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];
   const t=d[0]+d[1];
-  G.dice=d;G.rolled=true;log(`${pn(P())} rolled ${DICE[d[0]-1]}${DICE[d[1]-1]} = ${t}.`);
+  G.dice=d;G.rolled=true;G.stats.rolls[t]++;G.stats.turns++;log(`${pn(P())} rolled ${DICE[d[0]-1]}${DICE[d[1]-1]} = ${t}.`);
   if(t===7){G.discardQ=G.players.filter(p=>count(p)>7).map(p=>p.i);nextDiscard();return}
   const want={};
   for(const h of G.hexes)if(h.num===t&&h.id!==G.robber)for(const vid of h.corners){const v=G.vertices[vid];if(v.owner!==null){want[h.res]=want[h.res]||{};want[h.res][v.owner]=(want[h.res][v.owner]||0)+(v.city?2:1)}}
   for(const r in want){
     const ps=Object.keys(want[r]),total=ps.reduce((s,k)=>s+want[r][k],0);
     if(total>G.bank[r]&&ps.length>1){log(`Bank is out of ${r} — nobody receives it.`);continue}
-    for(const k of ps){const n=Math.min(want[r][k],G.bank[r]);G.players[k].res[r]+=n;G.bank[r]-=n;if(n)log(`${pn(G.players[k])} got ${ICON[r].repeat(n)}`)}
+    for(const k of ps){const n=Math.min(want[r][k],G.bank[r]);G.players[k].res[r]+=n;G.bank[r]-=n;G.stats.p[k].gained+=n;if(n)log(`${pn(G.players[k])} got ${ICON[r].repeat(n)}`)}
   }
   render();
 }
@@ -283,14 +291,14 @@ function nextDiscard(){
 function doDiscard(sel){
   const p=G.players[G.discardQ[0]],need=Math.floor(count(p)/2);
   if(!sel||RES.reduce((s,r)=>s+(sel[r]|0),0)!==need||!RES.every(r=>(sel[r]|0)>=0&&(sel[r]|0)<=p.res[r]))return;
-  pay(p,sel);log(`${pn(p)} discarded ${need} cards.`);G.discardQ.shift();nextDiscard();
+  pay(p,sel);G.stats.p[p.i].discarded+=need;log(`${pn(p)} discarded ${need} cards.`);G.discardQ.shift();nextDiscard();
 }
 function setMode(m){if(!G.rolled||G.prompt||![null,'road','settle','city','freeroad'].includes(m))return;if(G.mode!==null&&!['road','settle','city','freeroad'].includes(G.mode))return;G.mode=m;render()}
 function buyDev(){
   const p=P();if(!G.rolled||G.mode!==null||!G.devDeck.length||!canPay(p,COST.dev))return;
   pay(p,COST.dev);const c=G.devDeck.pop();
   if(c==='vp')p.vpc++;else p.newDev.push(c);
-  log(`${pn(p)} bought a development card.`);after();
+  G.stats.p[p.i].dev++;log(`${pn(p)} bought a development card.`);after();
 }
 function playDev(i){
   const p=P(),c=p.dev[i];if(!c||G.playedDev||G.mode!==null||G.prompt||G.phase!=='main'||G.sbp)return;
@@ -322,7 +330,7 @@ function accept(oi){
   const t=G.trade;if(!t||oi===t.from)return;const p=G.players[t.from],o=G.players[oi];
   if(!o||!canPay(p,t.give)||!canPay(o,t.get))return;
   RES.forEach(r=>{p.res[r]+=t.get[r]-t.give[r];o.res[r]+=t.give[r]-t.get[r]});
-  G.trade=null;log(`${pn(p)} traded with ${pn(o)}.`);render();
+  G.trade=null;G.stats.p[p.i].trades++;G.stats.p[o.i].trades++;log(`${pn(p)} traded with ${pn(o)}.`);render();
 }
 function cancelTrade(){G.trade=null;render()}
 function endTurn(){
@@ -342,7 +350,7 @@ function startTurn(i){
   G.cur=i;G.rolled=false;G.dice=null;G.playedDev=false;G.mode=null;G.trade=null;
   const p=P();p.dev.push(...p.newDev);p.newDev=[];                 // cards bought last turn (or in special building) become playable
   log(`${pn(p)}'s turn.`);
-  if(vp(i)>=G.opts.target){G.winner=i;log(`🏆 ${pn(p)} wins!`)}   // wins earned during special building count at your own turn
+  if(vp(i)>=G.opts.target)declareWin(i);   // wins earned during special building count at your own turn
   render();
 }
 
@@ -514,7 +522,7 @@ function renderSide(){
   s+=`<div id="bank"><div class="card dev" style="cursor:default"><em>🃏</em>Dev<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
   s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv" title="Development cards"><b>${o.dev.length+o.newDev.length}</b>🃏</div><div class="stat rc" title="Resource cards"><b>${count(o)}</b>🎴</div><div class="stat" title="Knights played"><b>${o.knights}</b>⚔️</div><div class="stat" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
   if(online)s+=`<div style="font-size:12px;text-align:center;opacity:.7">🌐 room ${esc(roomCode)}</div>`;
-  s+=`<div style="display:flex;gap:6px"><button onclick="toggleMute()" title="${muted?'Unmute':'Mute'}" style="border-radius:6px;padding:6px 10px;cursor:pointer">${muted?'🔇':'🔊'}</button>${!online||isHost?'<button onclick="start()" style="flex:1;border-radius:6px;padding:6px;cursor:pointer">New game</button>':''}</div>`;
+  s+=`<div style="display:flex;gap:6px"><button onclick="toggleMute()" title="${muted?'Unmute':'Mute'}" style="border-radius:6px;padding:6px 10px;cursor:pointer">${muted?'🔇':'🔊'}</button><button onclick="showStats()" title="Game stats" style="border-radius:6px;padding:6px 10px;cursor:pointer">📊</button>${!online||isHost?'<button onclick="start()" style="flex:1;border-radius:6px;padding:6px;cursor:pointer">New game</button>':''}</div>`;
   $('side').innerHTML=s;
 }
 function renderBottom(){
@@ -564,8 +572,17 @@ function playerTradeUI(){
 function proposeUI(){const give={},get={};RES.forEach(r=>{give[r]=+$('g_'+r).value||0;get[r]=+$('r_'+r).value||0});closeModal();act('propose',give,get)}
 function disc(r,d){const q=G.players[G.prompt.p],nv=discSel[r]+d;if(nv<0||nv>q.res[r]||count({res:discSel})+d>Math.floor(count(q)/2))return;discSel[r]=nv;render()}
 // state-driven modals: shown to whoever the state says must act
+function statsHTML(){
+  const st=G.stats,secs=Math.max(0,Math.round(((st.end||Date.now())-st.start)/1000)),max=Math.max(1,...st.rolls);
+  let h=`<h3>📊 ${st.turns} turns · ${Math.floor(secs/60)}m ${secs%60}s</h3><div style="overflow-x:auto"><table class="stats"><tr><th></th><th>VP</th><th>breakdown</th><th title="Resources produced">🎴+</th><th title="Cards robbed">🥷</th><th title="Cards discarded">🗑️</th><th title="Trades">🤝</th><th title="Dev cards bought">🃏</th><th title="Knights played">⚔️</th><th title="Longest road">🛣️</th></tr>`;
+  G.players.forEach(p=>{const s=st.p[p.i],b=[5-p.settles,2*(4-p.cities),G.longest.p===p.i?2:0,G.army.p===p.i?2:0,p.vpc];
+    h+=`<tr${G.winner===p.i?' class="w"':''}><td style="text-align:left">${AVI[p.i]} ${pn(p)}</td><td><b>${vp(p.i)}</b></td><td style="font-size:11px;white-space:nowrap">🏠${b[0]} 🏰${b[1]} 🛣️${b[2]} ⚔️${b[3]} 🏆${b[4]}</td><td>${s.gained}</td><td>${s.lost}</td><td>${s.discarded}</td><td>${s.trades}</td><td>${s.dev}</td><td>${p.knights}</td><td>${longestRoad(p.i)}</td></tr>`});
+  h+=`</table></div><div class="hist">`+[2,3,4,5,6,7,8,9,10,11,12].map(n=>`<div><b>${st.rolls[n]}</b><i style="height:${Math.round(st.rolls[n]/max*56)+2}px;background:${n===6||n===8?'#c62828':n===7?'#555':'#2b7fd6'}"></i><span>${n}</span></div>`).join('')+`</div><div style="font-size:11px;text-align:center;color:#666">dice roll distribution</div>`;
+  return h;
+}
+function showStats(){modal(statsHTML()+'<div style="text-align:center"><button onclick="closeModal()">Close</button></div>')}
 function stateModal(){
-  if(G.winner!==null)return winClosed?null:['win',`<h2>🏆 ${pn(G.players[G.winner])} wins with ${vp(G.winner)} VP!</h2><button onclick="winClosed=true;render()">Close</button>`];
+  if(G.winner!==null)return winClosed?null:['win',`<h2 style="margin:0 0 6px;text-align:center">🏆 ${pn(G.players[G.winner])} wins with ${vp(G.winner)} VP!</h2>${statsHTML()}<div style="text-align:center"><button onclick="winClosed=true;render()">Close</button></div>`];
   const pr=G.prompt;
   if(pr){
     if(pr.t==='discard'){
@@ -660,7 +677,8 @@ function demo(){ // #demo: auto-play a few turns for a quick look at the board
     endTurn();
   }
   roll();P().dev=['knight','road'];render();
+  if(location.hash==='#demowin'){P().vpc=9;P().res.wood++;P().res.brick++;setMode('road');clickE(first(G.edges,e=>validRoad(e,G.cur,false)).id)}
 }
-location.hash==='#test'?selfTest():location.hash==='#demo'?demo():renderLobby();
+location.hash==='#test'?selfTest():location.hash.startsWith('#demo')?demo():renderLobby();
 </script>
 </body></html>

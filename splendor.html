@@ -79,6 +79,8 @@ table.st tr.w{background:rgba(246,201,58,.2)}
 .panel{background:rgba(255,255,255,.08);border-radius:14px;padding:20px 24px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .panel h2{margin:0 0 14px;text-align:center}
 .panel input[type=text]{font-size:15px;padding:6px 8px;border-radius:6px;border:none}
+.kick{border:0;background:#e0503f;color:#fff;border-radius:50%;width:24px;height:24px;font-size:12px;line-height:1;cursor:pointer;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.kick:hover{background:#ff6a57}
 .slot2{background:rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;margin:8px 0;display:flex;align-items:center;gap:10px;width:320px}
 .slot2 .dot{width:20px;height:20px;border-radius:50%;border:2px solid #fff;flex:none}
 .slot2 input{flex:1}
@@ -240,7 +242,7 @@ function nextTurn(){
 }
 
 // ---------- net (host-authoritative, same shape as the Catan build) ----------
-let me=null,online=false,isHost=false,peer=null,hostConn=null,conns={},roomCode='',myName='',lobbySeats=[],netStatus='',inLobby=true;
+let me=null,online=false,isHost=false,peer=null,hostConn=null,conns={},roomCode='',myName='',lobbySeats=[],netStatus='',inLobby=true,kicked=false;
 const isMe=i=>me===null||me===i;
 const myTurn=()=>!!G&&isMe(G.cur)&&G.winner===null;
 function act(fn,...args){
@@ -255,6 +257,7 @@ const seatOn=x=>x.on!==undefined?x.on:!!x.conn;
 function broadcast(m){lobbySeats.forEach(x=>{if(x.conn&&x.conn!=='host'&&x.conn.open)x.conn.send(m)})}
 const broadcastLobby=()=>broadcast({t:'lobby',seats:lobbySeats.map(x=>({name:x.name,color:x.color,on:seatOn(x)}))});
 function hostRoom(){
+  kicked=false;
   myName=$('myName').value.trim()||'Host';
   roomCode=[...Array(5)].map(()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
   setStatus('Creating room…');if(peer)peer.destroy();
@@ -264,6 +267,7 @@ function hostRoom(){
   peer.on('error',e=>{if(e.type==='unavailable-id')hostRoom();else setStatus('Error: '+e.type)});
 }
 function joinRoom(){
+  kicked=false;
   myName=$('myName').value.trim()||'Guest';const code=$('joinCode').value.trim().toUpperCase();
   if(code.length<3){setStatus('Enter the room code.');return}
   setStatus('Connecting…');if(peer)peer.destroy();
@@ -272,7 +276,7 @@ function joinRoom(){
     hostConn=peer.connect('splendor-'+code,{reliable:true});
     hostConn.on('open',()=>{online=true;roomCode=code;hostConn.send({t:'join',name:myName});setStatus('Joined — waiting for the host.')});
     hostConn.on('data',onClientData);
-    hostConn.on('close',()=>setStatus('Disconnected. Reload and join again with the same name to resume.'));
+    hostConn.on('close',()=>{if(!kicked)setStatus('Disconnected from the host. Reload and Join again with the same name to resume.')});
   });
   peer.on('error',e=>setStatus(e.type==='peer-unavailable'?'Room not found.':'Error: '+e.type));
 }
@@ -286,19 +290,64 @@ function onHostData(c,d){
     else{broadcastLobby();renderLobby()}
   }else if(d.t==='act'){const s=conns[c.peer];if(Array.isArray(d.args)&&allowed(s,d.fn,d.args))window[d.fn](...d.args)}
 }
+function reindexSeats(){conns={};lobbySeats.forEach((x,i)=>{x.color=PCOL[i];if(x.conn&&x.conn!=='host')conns[x.conn.peer]=i})}
+function kick(seat){                                   // host-only, lobby-only
+  if(!isHost||!inLobby||seat===0)return;
+  const x=lobbySeats[seat];if(!x)return;
+  const c=x.conn;
+  if(c&&c!=='host'){
+    delete conns[c.peer];                              // so the close handler skips it
+    try{c.send({t:'kicked'})}catch(e){}
+    setTimeout(()=>{try{c.close()}catch(e){}},200);    // let the message flush first
+  }
+  lobbySeats.splice(seat,1);reindexSeats();
+  broadcastLobby();renderLobby();
+}
 function onLeave(c){
   const s=conns[c.peer];if(s===undefined)return;delete conns[c.peer];
   if(G&&!inLobby){lobbySeats[s].conn=null;log(`${pn(G.players[s])} disconnected — rejoin with the same name.`);render()}
-  else{lobbySeats.splice(s,1);conns={};lobbySeats.forEach((x,i)=>{x.color=PCOL[i];if(x.conn&&x.conn!=='host')conns[x.conn.peer]=i});broadcastLobby();renderLobby()}
+  else{lobbySeats.splice(s,1);reindexSeats();broadcastLobby();renderLobby()}
 }
 function onClientData(d){
   if(d.t==='welcome')me=d.seat;
   else if(d.t==='lobby'){lobbySeats=d.seats;inLobby=true;renderLobby()}
   else if(d.t==='state'){G=d.G;inLobby=false;$('lobby').style.display='none';render()}
+  else if(d.t==='kicked'){
+    kicked=true;online=false;isHost=false;me=null;G=null;lobbySeats=[];inLobby=true;hostConn=null;
+    if(peer)peer.destroy();
+    setStatus('The host removed you from the room.');
+  }
   else if(d.t==='full')setStatus('Room is full or the game already started.');
 }
 function setStatus(s){netStatus=s;renderLobby()}
 
+// ---------- save / resume: a reload should not lose the game ----------
+const SAVEKEY='splendorSave',JOINKEY='splendorJoin';   // own game vs. a room we joined: separate slots so two tabs don't clobber each other
+let saved=null;try{saved=JSON.parse(localStorage[SAVEKEY]||localStorage[JOINKEY]||'null')}catch(e){}
+if(saved&&Date.now()-saved.t>86400000*3)saved=null;              // forget saves older than 3 days
+function saveState(){
+  try{
+    if(online&&!isHost)localStorage[JOINKEY]=JSON.stringify({t:Date.now(),client:true,roomCode,myName});
+    else if(G)localStorage[SAVEKEY]=JSON.stringify({t:Date.now(),G,online,roomCode,myName,seats:lobbySeats.map(x=>({name:x.name,color:x.color}))});
+  }catch(e){}                                                     // quota / private mode: just skip
+}
+function dropSave(){saved=null;try{localStorage.removeItem(SAVEKEY);localStorage.removeItem(JOINKEY)}catch(e){}renderLobby()}
+function resumeSave(){
+  const sv=saved;if(!sv)return;
+  if(sv.client){$('myName').value=sv.myName;$('joinCode').value=sv.roomCode;joinRoom();return}
+  G=sv.G;lastCur=-1;prevSnap=null;fxGame=null;winClosed=false;sel=[];pick=null;
+  if(sv.online){
+    myName=sv.myName;roomCode=sv.roomCode;isHost=true;online=true;me=0;kicked=false;
+    lobbySeats=sv.seats.map((x,i)=>({name:x.name,color:x.color,conn:i===0?'host':null}));
+    conns={};
+    if(peer)peer.destroy();
+    peer=new Peer('splendor-'+roomCode);
+    peer.on('connection',c=>{c.on('data',d=>onHostData(c,d));c.on('close',()=>onLeave(c))});
+    peer.on('error',e=>setStatus('Error: '+e.type));
+    log('Game resumed — players can rejoin with the same name.');
+  }
+  inLobby=false;$('lobby').style.display='none';render();
+}
 // ---------- lobby ----------
 let seatVals=['','','',''];
 function renderLobby(){
@@ -309,10 +358,14 @@ function renderLobby(){
   if(!online)h+=`Your name <input type="text" id="myName" value="${esc(nmv)}" placeholder="name"> <button class="btn" onclick="hostRoom()">🌐 Host online room</button> <span style="opacity:.7">or</span> code <input type="text" id="joinCode" value="${esc(cdv)}" maxlength="5" style="width:90px;text-transform:uppercase" placeholder="ABCDE"> <button class="btn b" onclick="joinRoom()">Join</button>`;
   else h+=`🌐 Room code <b style="font-size:24px;letter-spacing:3px;background:rgba(0,0,0,.3);padding:2px 10px;border-radius:6px">${roomCode}</b> ${isHost?'— you are the host':'— joined as '+esc(myName)}`;
   h+=`</div><div style="text-align:center;margin-top:8px;font-size:13px;opacity:.85">${esc(netStatus)||(online?'':'Fill the seats to play hotseat on this screen, or host/join an online room.')}</div>`;
+  if(saved&&!online){
+    const mins=Math.round((Date.now()-saved.t)/60000),ago=mins<1?'just now':mins<60?mins+' min ago':Math.round(mins/60)+' h ago';
+    h+=`<div style="text-align:center;margin-top:10px"><button class="btn" onclick="resumeSave()">▶ Resume ${saved.client?`room ${esc(saved.roomCode)} as ${esc(saved.myName)}`:`your ${saved.G&&saved.G.players?saved.G.players.length+'-player ':''}game`}</button> <span style="opacity:.7;font-size:12px">saved ${ago}</span> <button class="btn" style="background:#00000033" onclick="dropSave()">✖</button></div>`;
+  }
   $('lobbyHead').innerHTML=h;
   let p=`<h2>Players${online?' ('+lobbySeats.length+'/4)':''}</h2>`;
   if(!online)p+=[0,1,2,3].map(i=>`<div class="slot2"><div class="dot" style="background:${PCOL[i]}"></div><input type="text" id="nm${i}" value="${esc(seatVals[i])}" placeholder="${i<2?'Player '+(i+1):'empty seat'}"></div>`).join('')+'<div style="font-size:12px;opacity:.8;text-align:center">Hotseat — 2 to 4 players on this screen.</div>';
-  else p+=lobbySeats.map((x,i)=>`<div class="slot2"><div class="dot" style="background:${PCOL[i]}"></div><span style="flex:1;font-weight:600">${esc(x.name)}${i===me?' (you)':''}${i===0?' 👑':''}</span>${seatOn(x)?'<span style="color:#7fff9a">● online</span>':'<span style="opacity:.6">○ offline</span>'}</div>`).join('')+'<div style="font-size:12px;opacity:.8;text-align:center">Friends open this page, type the code and Join.</div>';
+  else p+=lobbySeats.map((x,i)=>`<div class="slot2"><div class="dot" style="background:${PCOL[i]}"></div><span style="flex:1;font-weight:600">${esc(x.name)}${i===me?' (you)':''}${i===0?' 👑':''}</span>${seatOn(x)?'<span style="color:#7fff9a">● online</span>':'<span style="opacity:.6">○ offline</span>'}${isHost&&i>0?`<button class="kick" onclick="kick(${i})" title="Remove ${esc(x.name)} from the room">✖</button>`:''}</div>`).join('')+'<div style="font-size:12px;opacity:.8;text-align:center">Friends open this page, type the code and Join.</div>';
   $('lobbyPlayers').innerHTML=p;
   const client=online&&!isHost;
   $('lobbyRules').style.display=client?'none':'';
@@ -487,6 +540,7 @@ function render(){
   else if(sm)modal(sm[1]);
   playFx();
   if(isHost)broadcast({t:'state',G});
+  saveState();
 }
 
 // ---------- self-check: splendor.html#test ----------

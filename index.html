@@ -391,6 +391,7 @@ function propose(give,get){
   const p=P();if(!G.rolled||G.mode!==null||G.trade||G.sbp)return;
   const clean=o=>RES.reduce((a,r)=>(a[r]=Math.max(0,o&&o[r]|0),a),{});give=clean(give);get=clean(get);
   if(!canPay(p,give)||!RES.some(r=>give[r]||get[r]))return;
+  if(RES.some(r=>give[r]&&get[r]))return;   // no trading a resource for itself
   G.trade={give,get,from:G.cur,id:++G.tradeSeq};render();
 }
 function accept(oi){
@@ -662,8 +663,9 @@ function renderBottom(){
 function toggleTrade(){tradeOpen=!tradeOpen;tGive={};tGet={};render()}
 function closeTrade(){tradeOpen=false;tGive={};tGet={};render()}
 function tAdd(side,r,d){
-  const p=me===null?P():G.players[me],o=side==='give'?tGive:tGet,nv=(o[r]|0)+d;
+  const p=me===null?P():G.players[me],o=side==='give'?tGive:tGet,other=side==='give'?tGet:tGive,nv=(o[r]|0)+d;
   if(nv<0||nv>(side==='give'?p.res[r]:9))return;
+  if(d>0&&other[r])return;   // a resource can only sit on one side of the offer
   o[r]=nv;if(!nv)delete o[r];render();
 }
 function bankDeal(){   // do the two rows form one legal bank/port trade?

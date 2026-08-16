@@ -54,6 +54,65 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
 @keyframes drop{0%{transform:translateY(-40px) scale(1.6);opacity:0}70%{opacity:1}100%{transform:none}}
 .slide{animation:slide .55s cubic-bezier(.4,0,.2,1)}
 @keyframes slide{from{transform:translate(var(--dx),var(--dy))}to{transform:none}}
+/* --- right pane, colonist-style --- */
+.rc{display:inline-block;width:15px;height:20px;border-radius:3px;background:var(--c);font-size:10px;line-height:19px;text-align:center;vertical-align:-5px;border:1px solid rgba(0,0,0,.3);margin:0 1px;box-shadow:0 1px 1px rgba(0,0,0,.25)}
+#chat{background:#f6f0e1;border-radius:10px;box-shadow:inset 0 1px 4px rgba(0,0,0,.15);flex:none;display:flex;flex-direction:column;overflow:hidden}
+#chat .chd{padding:5px 10px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;background:#e9e0c9;font-size:13px}
+#chatlog{max-height:96px;overflow-y:auto;padding:4px 8px;font-size:12.5px}
+#chatlog div{padding:1px 0}
+.chin{display:flex;gap:4px;padding:5px 6px;border-top:1px solid #e0d7bf}
+.chin input{flex:1;min-width:0;border:1px solid #cbbf9f;border-radius:6px;padding:4px 7px;font:inherit;font-size:12.5px}
+.chin button{border:0;background:#5b8fd6;color:#fff;border-radius:6px;padding:0 10px;cursor:pointer}
+#bank{align-items:center}
+#bank .bicon{font-size:22px;flex:none;padding:0 2px}
+.card.sm{width:36px;height:48px;font-size:19px;border-radius:5px;box-shadow:0 2px 3px rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.5)}
+.card.sm .n{font-size:10px;padding:0 5px;top:-6px;right:-5px}
+.card.pickable{cursor:pointer}
+.card.pickable:hover{transform:translateY(-3px)}
+.card.off{opacity:.35}
+.pl{flex-direction:column;align-items:stretch;gap:3px;padding:5px 7px}
+.pl .pn{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl .pr{display:flex;align-items:center;gap:6px}
+.pc{width:30px;height:40px;border-radius:5px;position:relative;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;box-shadow:0 2px 3px rgba(0,0,0,.3),inset 0 0 0 2px rgba(255,255,255,.45)}
+.pc.dev{background:linear-gradient(160deg,#6f77e0,#3f47a8)}
+.pc.res{background:linear-gradient(160deg,#a583d8,#6d4aa8);font-size:14px}
+.pc .n{position:absolute;top:-6px;right:-6px;background:#1f2b3a;color:#fff;font-size:10px;border-radius:9px;padding:0 5px;line-height:15px}
+.ps{flex:none;width:38px;text-align:center;font-size:11px;line-height:1.05;color:#4a4335}
+.pl .pr .pc:nth-of-type(2){margin-right:auto}
+.ps b{display:block;font-size:15px;color:#222}
+.srow{display:flex;gap:6px;align-items:center}
+.sbtn{border-radius:6px;padding:6px 10px;cursor:pointer;border:1px solid #a89a78;background:#f6f0e1}
+.sbtn.grow{flex:1}
+.room{flex:1;font-size:12px;opacity:.75}
+/* --- trade panel + incoming offer --- */
+#overlay{position:fixed;left:0;top:0;right:340px;bottom:108px;pointer-events:none;z-index:6}
+#overlay>*{pointer-events:auto;position:absolute}
+#tradePanel{left:10px;bottom:8px;display:flex;gap:6px;align-items:stretch}
+.rows{background:rgba(246,240,225,.96);border:2px solid #b8a985;border-radius:10px;padding:5px;display:flex;flex-direction:column;gap:4px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.trow{display:flex;align-items:center;gap:5px;min-height:52px;background:#efe7d2;border-radius:7px;padding:3px 6px;min-width:400px}
+.trow.get{background:#e4f2e2}
+.trow.give{background:#f6e6e2}
+.trow .who,.orow .who{width:34px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
+.arr{font-size:17px;font-weight:800;flex:none}
+.arr.down{color:#2e9e46}
+.arr.up{color:#d0402c}
+.cards{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.none{font-size:11.5px;color:#8a7f66}
+.tbtn,.obtn{display:flex;flex-direction:column;gap:5px;justify-content:center}
+.ok,.no{border:2px solid #7f9db9;border-radius:9px;width:58px;height:46px;font-size:17px;cursor:pointer;background:linear-gradient(#f4f8fc,#d5e2ee);box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.ok{border-color:#4c9a5c;background:linear-gradient(#dff6e2,#a8e0b4)}
+.no{border-color:#b5544a;background:linear-gradient(#fbe3e0,#f0b1a8)}
+.ok:disabled,.no:disabled{opacity:.5;cursor:default;filter:grayscale(.6)}
+.ok:hover:not(:disabled),.no:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+#offer{right:10px;top:10px;background:rgba(246,240,225,.97);border:2px solid #b8a985;border-radius:10px;padding:6px;display:flex;gap:6px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.ors{display:flex;flex-direction:column;gap:4px}
+.orow{display:flex;align-items:center;gap:6px;background:#efe7d2;border-radius:7px;padding:3px 8px;min-width:215px;min-height:46px}
+.orow.get{background:#e4f2e2}
+.orow.give{background:#f6e6e2}
+.av.sm{width:28px;height:28px;font-size:15px;border-width:2px}
+.note{font-size:11px;color:#7a6f58;text-align:center;max-width:62px}
+#turn{display:flex;align-items:center;gap:8px;text-align:left}
+#turn .tt{flex:1;min-width:0}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9}
 #modal>div{background:#f1eadb;padding:18px 22px;border-radius:12px;max-width:720px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .stats{border-collapse:collapse;font-size:13px;width:100%}
@@ -107,6 +166,7 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#1f6db5;col
     </div>
   </div>
 </div></div>
+<div id="overlay"></div>
 <div id="modal"><div id="mbody"></div></div>
 <script>
 // ponytail: single-file Catan. Hotseat or online (WebRTC via PeerJS, host-authoritative — host's browser owns the state).
@@ -174,7 +234,7 @@ function newGame(seats,opts={friendly:true,balanced:false,hideBank:false,target:
   G={...makeBoard(opts.board||'base'),id:Math.random().toString(36).slice(2),opts,diceDeck:[],players:[],cur:0,phase:'setup',setupIdx:0,mode:'setup-settle',dice:null,rolled:false,playedDev:false,free:0,
     bank:{wood:B.bank,brick:B.bank,sheep:B.bank,wheat:B.bank,ore:B.bank},
     devDeck:shuffle(Object.entries(B.dev).flatMap(([c,n])=>Array(n).fill(c))),
-    longest:{p:null,len:4},army:{p:null,n:2},log:[],winner:null,lastSettle:null,trade:null,tradeSeq:0,discardQ:[],prompt:null,
+    longest:{p:null,len:4},army:{p:null,n:2},log:[],winner:null,lastSettle:null,trade:null,tradeSeq:0,discardQ:[],prompt:null,chat:[],
     fx:[],fxSeq:0,stats:{start:Date.now(),end:null,turns:0,rolls:Array(13).fill(0),p:seats.map(()=>({gained:0,lost:0,discarded:0,trades:0,dev:0}))}};
   seats.forEach((s,i)=>G.players.push({i,name:s.name||s,color:s.color||PCOL[i],res:{wood:0,brick:0,sheep:0,wheat:0,ore:0},dev:[],newDev:[],knights:0,vpc:0,roads:15,settles:5,cities:4}));
   const ord=[...Array(seats.length).keys()];G.setupOrder=[...ord,...[...ord].reverse()];
@@ -182,7 +242,8 @@ function newGame(seats,opts={friendly:true,balanced:false,hideBank:false,target:
   lastCur=-1;winClosed=false;inLobby=false;$('lobby').style.display='none';render();
 }
 const P=()=>G.players[G.cur];
-const pn=p=>`<b style="color:${p.color}">${esc(p.name)}</b>`;
+const pn=p=>`<b style="color:${p.color}">${AVI[p.i]}&nbsp;${esc(p.name)}</b>`;
+const rc=(r,n=1)=>Array(Math.max(0,n)).fill(`<i class="rc" style="--c:${CARD[r]}">${ICON[r]}</i>`).join('');
 const log=m=>{G.log.push(m);if(G.log.length>200)G.log.shift()};
 const count=p=>RES.reduce((s,r)=>s+p.res[r],0);
 const canPay=(p,c)=>RES.every(r=>p.res[r]>=(c[r]||0));
@@ -285,7 +346,7 @@ function roll(){
   for(const r in want){
     const ps=Object.keys(want[r]),total=ps.reduce((s,k)=>s+want[r][k],0);
     if(total>G.bank[r]&&ps.length>1){log(`Bank is out of ${r} — nobody receives it.`);continue}
-    for(const k of ps){const n=Math.min(want[r][k],G.bank[r]);G.players[k].res[r]+=n;G.bank[r]-=n;G.stats.p[k].gained+=n;fx('bank',+k,r,n);if(n)log(`${pn(G.players[k])} got ${ICON[r].repeat(n)}`)}
+    for(const k of ps){const n=Math.min(want[r][k],G.bank[r]);G.players[k].res[r]+=n;G.bank[r]-=n;G.stats.p[k].gained+=n;fx('bank',+k,r,n);if(n)log(`${pn(G.players[k])} got ${rc(r,n)}`)}
   }
   render();
 }
@@ -318,13 +379,13 @@ function playDev(i){
   else if(c==='mono')G.prompt={t:'mono'};
   after();
 }
-function plenty(r){if(!G.prompt||G.prompt.t!=='plenty'||!G.bank[r])return;P().res[r]++;G.bank[r]--;fx('bank',G.cur,r);log(`${pn(P())} took ${ICON[r]}.`);if(--G.prompt.n<=0)G.prompt=null;render()}
+function plenty(r){if(!G.prompt||G.prompt.t!=='plenty'||!G.bank[r])return;P().res[r]++;G.bank[r]--;fx('bank',G.cur,r);log(`${pn(P())} took ${rc(r)}`);if(--G.prompt.n<=0)G.prompt=null;render()}
 function mono(r){if(!G.prompt||G.prompt.t!=='mono'||!RES.includes(r))return;let n=0;G.players.forEach(o=>{if(o!==P()){n+=o.res[r];fx(o.i,G.cur,r,o.res[r]);P().res[r]+=o.res[r];o.res[r]=0}});G.prompt=null;log(`${pn(P())} monopolized ${r} (+${n}).`);render()}
 function rate(p,r){let b=4;G.vertices.forEach(v=>{if(v.owner===p.i&&v.port){if(v.port==='any')b=Math.min(b,3);if(v.port===r)b=2}});return b}
 function doBank(g,r){
   const p=P(),n=rate(p,g);
   if(!G.rolled||G.mode!==null||G.sbp||!RES.includes(g)||!RES.includes(r)||g===r||p.res[g]<n||!G.bank[r])return;
-  p.res[g]-=n;G.bank[g]+=n;p.res[r]++;G.bank[r]--;fx(G.cur,'bank',g,n);fx('bank',G.cur,r);log(`${pn(p)} traded ${n} ${ICON[g]} for 1 ${ICON[r]}.`);render();
+  p.res[g]-=n;G.bank[g]+=n;p.res[r]++;G.bank[r]--;fx(G.cur,'bank',g,n);fx('bank',G.cur,r);log(`${pn(p)} traded ${rc(g,n)} for ${rc(r)}`);render();
 }
 function propose(give,get){
   const p=P();if(!G.rolled||G.mode!==null||G.trade||G.sbp)return;
@@ -339,6 +400,19 @@ function accept(oi){
   G.trade=null;G.stats.p[p.i].trades++;G.stats.p[o.i].trades++;log(`${pn(p)} traded with ${pn(o)}.`);render();
 }
 function cancelTrade(){G.trade=null;render()}
+function declineTrade(s){
+  const t=G.trade;if(!t||s===t.from||!G.players[s])return;
+  t.no=t.no||[];if(!t.no.includes(s))t.no.push(s);
+  log(`${pn(G.players[s])} declined the trade.`);
+  if(t.no.length>=G.players.length-1){G.trade=null;log('Nobody accepted — offer withdrawn.')}
+  render();
+}
+function chat(seat,msg){
+  const p=G.players[seat];if(!p||typeof msg!=='string')return;
+  const m=msg.slice(0,200).trim();if(!m)return;
+  G.chat.push({i:seat,n:p.name,c:p.color,m});if(G.chat.length>100)G.chat.shift();
+  chatOpen=true;render();
+}
 function endTurn(){
   if(!G.rolled||G.mode!==null||G.prompt)return;
   const n=G.players.length;
@@ -369,8 +443,11 @@ function act(fn,...args){
   if(!online||allowed(me,fn,args))window[fn](...args);
 }
 function allowed(s,fn,args){
-  if(!G||G.winner!==null||s===undefined)return false;
+  if(!G||s===undefined)return false;
+  if(fn==='chat')return args[0]===s;
+  if(G.winner!==null)return false;
   if(fn==='accept')return !!G.trade&&args[0]===s;
+  if(fn==='declineTrade')return !!G.trade&&args[0]===s;
   if(fn==='doDiscard')return !!G.prompt&&G.prompt.t==='discard'&&G.prompt.p===s;
   return s===G.cur&&['clickV','clickE','clickH','steal','roll','setMode','buyDev','playDev','plenty','mono','doBank','propose','cancelTrade','endTurn'].includes(fn);
 }
@@ -453,7 +530,8 @@ function startGame(){
 function start(){if(online&&!isHost)return;inLobby=true;if(isHost)broadcastLobby();renderLobby()}
 
 // ---------- render ----------
-let modalKey=null,discSel=null,declined=0,winClosed=false,lastCur=-1,turnStart=Date.now(),lastDiceKey='';
+let modalKey=null,discSel=null,winClosed=false,lastCur=-1,turnStart=Date.now(),lastDiceKey='';
+let tradeOpen=false,tGive={},tGet={},chatOpen=false,chatDraft='',chatFocus=0;
 const PIPS={1:[5],2:[3,7],3:[3,5,7],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 const die=(v,shake)=>`<div class="die${shake?' shake':''}">${[1,2,3,4,5,6,7,8,9].map(i=>`<i style="visibility:${PIPS[v].includes(i)?'visible':'hidden'}"></i>`).join('')}</div>`;
 const modal=h=>{$('mbody').innerHTML=h;$('modal').style.display='flex'};
@@ -524,12 +602,24 @@ const AVI=['🦊','🐻','🐸','🐼','🦉','🐯'],DEVI={knight:'⚔️',vp:'
 const av=p=>`<div class="av" style="background:${p.color}">${AVI[p.i]}<span class="vp">${vp(p.i)}</span></div>`;
 function renderSide(){
   const p=P();
-  let s=`<div id="log">${G.log.slice(-60).reverse().map(l=>`<div>${l}</div>`).join('')}</div>`;
-  s+=`<div id="bank"><div class="card dev" style="cursor:default"><em>🃏</em>Dev<span class="n">${G.devDeck.length}</span></div>`+RES.map(r=>`<div class="card" data-r="${r}" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`</div>`;
-  s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" data-i="${o.i}" style="border-color:${o.color}">${av(o)}<div class="name">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' 🛣️':''}${G.army.p===o.i?' ⚔️':''}</div><div class="stat dv" title="Development cards"><b>${o.dev.length+o.newDev.length}</b>🃏</div><div class="stat rc" title="Resource cards"><b>${count(o)}</b>🎴</div><div class="stat" title="Knights played"><b>${o.knights}</b>⚔️</div><div class="stat" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div></div>`).join('');
-  if(online)s+=`<div style="font-size:12px;text-align:center;opacity:.7">🌐 room ${esc(roomCode)}</div>`;
-  s+=`<div style="display:flex;gap:6px"><button onclick="toggleMute()" title="${muted?'Unmute':'Mute'}" style="border-radius:6px;padding:6px 10px;cursor:pointer">${muted?'🔇':'🔊'}</button><button onclick="showStats()" title="Game stats" style="border-radius:6px;padding:6px 10px;cursor:pointer">📊</button>${!online||isHost?'<button onclick="start()" style="flex:1;border-radius:6px;padding:6px;cursor:pointer">New game</button>':''}</div>`;
+  let s=`<div id="log">${G.log.slice(-80).reverse().map(l=>`<div>${l}</div>`).join('')}</div>`;
+  s+=`<div id="chat"><div class="chd" onclick="chatOpen=!chatOpen;render()">💬 Chat<span>${chatOpen?'▾':'▴'}</span></div>`;
+  if(chatOpen)s+=`<div id="chatlog">${G.chat.map(m=>`<div><b style="color:${m.c}">${AVI[m.i]} ${esc(m.n)}:</b> ${esc(m.m)}</div>`).join('')||'<div style="opacity:.5">No messages yet.</div>'}</div><div class="chin"><input id="chatin" maxlength="200" placeholder="Send a message" oninput="chatDraft=this.value" onfocus="chatFocus=1" onblur="chatFocus=0" onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">➤</button></div>`;
+  s+=`</div>`;
+  s+=`<div id="bank"><div class="bicon" title="Bank">🏦</div>`+RES.map(r=>`<div class="card sm" data-r="${r}" style="--c:${CARD[r]}">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')+`<div class="card sm" style="--c:#5b62c9" title="Development cards left">🃏<span class="n">${G.devDeck.length}</span></div></div>`;
+  s+=G.players.map(o=>`<div class="pl ${o===p?'cur':''}" data-i="${o.i}" style="border-color:${o.color}">
+    <div class="pn">${esc(o.name)}${me===o.i?' <small>(you)</small>':''}${G.longest.p===o.i?' <span title="Longest Road">🛣️</span>':''}${G.army.p===o.i?' <span title="Largest Army">⚔️</span>':''}</div>
+    <div class="pr">${av(o)}
+      <div class="pc dev" title="Development cards">?<span class="n">${o.dev.length+o.newDev.length}</span></div>
+      <div class="pc res" title="Resource cards">🎴<span class="n">${count(o)}</span></div>
+      <div class="ps" title="Knights played"><b>${o.knights}</b>⚔️</div>
+      <div class="ps" title="Longest road"><b>${longestRoad(o.i)}</b>🛣️</div>
+    </div></div>`).join('');
+
+  s+=`<div class="srow">${online?`<span class="room">🌐 room ${esc(roomCode)}</span>`:''}<button class="sbtn" onclick="toggleMute()" title="${muted?'Unmute':'Mute'}">${muted?'🔇':'🔊'}</button><button class="sbtn" onclick="showStats()" title="Game stats">📊</button>${!online||isHost?'<button class="sbtn grow" onclick="start()">New game</button>':''}</div>`;
   $('side').innerHTML=s;
+  const ci=$('chatin');if(ci){ci.value=chatDraft;if(chatFocus)ci.focus()}
+  const cl=$('chatlog');if(cl)cl.scrollTop=cl.scrollHeight;
 }
 function renderBottom(){
   const p=P(),h=me===null?p:G.players[me],m=G.mode,main=G.phase==='main',mine=myTurn(),busy=m!==null||G.winner!==null||!mine||!!G.prompt;
@@ -542,7 +632,8 @@ function renderBottom(){
     m==='robber'?`${who}: move the robber — click a hex`:m==='road'?`${who}: click an edge for the road`:
     m==='freeroad'?`${who}: place ${G.free} free road(s)`:m==='settle'?`${who}: click a vertex for the settlement`:
     m==='city'?`${who}: click a settlement to upgrade`:G.rolled?`${who}: build, trade, or end turn`:`${who}: roll the dice`;
-  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card" data-r="${r}" style="--c:${CARD[r]}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
+  const pickHand=tradeOpen&&mine&&!busy;
+  let s=`<div id="hand">`+RES.filter(r=>h.res[r]).map(r=>`<div class="card ${pickHand?'pickable':''}" data-r="${r}" style="--c:${CARD[r]}" ${pickHand?`onclick="tAdd('give','${r}',1)"`:''} title="${r}">${ICON[r]}<span class="n">${h.res[r]}</span></div>`).join('');
   if(main){
     s+=h.dev.map((c,i)=>`<button class="card dev" ${G.playedDev||busy||G.sbp?'disabled':''} onclick="act('playDev',${i})" title="Play ${NAME[c]}"><em>${DEVI[c]}</em>${NAME[c]}</button>`).join('');
     s+=h.newDev.map(c=>`<div class="card dev new" title="Playable next turn"><em>${DEVI[c]}</em>${NAME[c]}</div>`).join('');
@@ -550,13 +641,13 @@ function renderBottom(){
   }
   s+=`</div>`;
   if(G.dice){const key=G.cur+'-'+G.dice.join(''),shake=key!==lastDiceKey;lastDiceKey=key;s+=`<div id="dice">${G.dice.map(v=>die(v,shake)).join('')}</div>`}
-  s+=`<div id="turn"><b style="color:${p.color}">${G.sbp?'🔨 '+esc(p.name)+' builds':esc(p.name)+"'s turn"}</b> <span id="clock" style="font-variant-numeric:tabular-nums;color:#555">${clock()}</span><small>${status}</small></div>`;
+  s+=`<div id="turn">${av(p)}<div class="tt"><b style="color:${p.color}">${G.sbp?'🔨 '+esc(p.name)+' builds':esc(p.name)+"'s turn"}</b><small>${status}</small></div><span id="clock" style="font-variant-numeric:tabular-nums;color:#555">${clock()}</span></div>`;
   if(main){
     const can=k=>G.rolled&&!busy&&canPay(p,COST[k]),ok=G.rolled&&!busy,tr=ok&&!G.sbp;
     s+=`<div id="actions">
       <button class="act go" ${G.rolled||busy?'disabled':''} onclick="act('roll')" title="Roll dice">🎲</button>
-      <button class="act" ${tr?'':'disabled'} onclick="bankTradeUI()" title="Bank / port trade">🔄</button>
-      <button class="act" ${tr&&!G.trade?'':'disabled'} onclick="playerTradeUI()" title="Trade with players">🤝</button>
+      <button class="act ${tradeOpen?'go':''}" ${tr?'':'disabled'} onclick="toggleTrade()" title="Trade with the bank, a port or the other players">${tradeOpen?'✖':'🔄'}</button>
+
       <button class="act" ${can('dev')&&G.devDeck.length?'':'disabled'} onclick="act('buyDev')" title="Buy development card (🐑🌾🪨)">🃏</button>
       <button class="act" ${can('road')&&p.roads?'':'disabled'} onclick="act('setMode','road')" title="Road (🌲🧱)">🛣️<span class="n">${p.roads}</span></button>
       <button class="act" ${can('settle')&&p.settles?'':'disabled'} onclick="act('setMode','settle')" title="Settlement (🌲🧱🐑🌾)">🏠<span class="n">${p.settles}</span></button>
@@ -567,22 +658,61 @@ function renderBottom(){
   $('bottom').innerHTML=s;
 }
 // local-only forms (read inputs, then send one action)
-function bankTradeUI(){
-  const p=me===null?P():G.players[me];
-  modal(`<h3>Bank / port trade</h3>Give <select id="tg">${RES.map(r=>`<option value="${r}">${r} (${rate(p,r)}:1, have ${p.res[r]})</option>`).join('')}</select> for 1 <select id="tr">${RES.map(r=>`<option value="${r}">${r}${G.opts.hideBank?'':' (bank '+G.bank[r]+')'}</option>`).join('')}</select><br><button onclick="act('doBank',$('tg').value,$('tr').value);closeModal()">Trade</button> <button onclick="closeModal()">Close</button>`);
+// ---------- trade panel: bank row -> what you get, your hand -> what you give ----------
+function toggleTrade(){tradeOpen=!tradeOpen;tGive={};tGet={};render()}
+function closeTrade(){tradeOpen=false;tGive={};tGet={};render()}
+function tAdd(side,r,d){
+  const p=me===null?P():G.players[me],o=side==='give'?tGive:tGet,nv=(o[r]|0)+d;
+  if(nv<0||nv>(side==='give'?p.res[r]:9))return;
+  o[r]=nv;if(!nv)delete o[r];render();
 }
-function playerTradeUI(){
-  const p=me===null?P():G.players[me];
-  modal(`<h3>Propose a trade</h3><table><tr><th></th><th>Give</th><th>Get</th></tr>`+RES.map(r=>`<tr><td>${ICON[r]} ${r} (${p.res[r]})</td><td><input type="number" id="g_${r}" min="0" max="${p.res[r]}" value="0"></td><td><input type="number" id="r_${r}" min="0" value="0"></td></tr>`).join('')+`</table><button onclick="proposeUI()">Propose</button> <button onclick="closeModal()">Close</button>`);
+function bankDeal(){   // do the two rows form one legal bank/port trade?
+  const p=me===null?P():G.players[me],gk=RES.filter(r=>tGive[r]),rk=RES.filter(r=>tGet[r]);
+  if(gk.length!==1||rk.length!==1)return null;
+  const g=gk[0],r=rk[0];
+  return g!==r&&tGet[r]===1&&tGive[g]===rate(p,g)&&G.bank[r]?[g,r]:null;
 }
-function proposeUI(){const give={},get={};RES.forEach(r=>{give[r]=+$('g_'+r).value||0;get[r]=+$('r_'+r).value||0});closeModal();act('propose',give,get)}
+function doTradeBank(){const d=bankDeal();if(!d)return;act('doBank',d[0],d[1]);tGive={};tGet={};render()}
+function doTradeOffer(){act('propose',{...tGive},{...tGet});tradeOpen=false;tGive={};tGet={};render()}
+const tCards=(o,side)=>RES.filter(r=>o[r]).map(r=>`<div class="card sm pickable" style="--c:${CARD[r]}" onclick="tAdd('${side}','${r}',-1)" title="click to remove">${ICON[r]}<span class="n">${o[r]}</span></div>`).join('');
+function renderTrade(){
+  let s='',t=G.trade;
+  if(t){
+    const from=G.players[t.from],mineOffer=isMe(t.from),viewer=me===null||mineOffer?null:G.players[me];
+    const inc=mineOffer?t.get:t.give,out=mineOffer?t.give:t.get;
+    const show=o=>RES.filter(r=>o[r]).map(r=>`<div class="card sm" style="--c:${CARD[r]}">${ICON[r]}<span class="n">${o[r]}</span></div>`).join('')||'<span class="none">nothing</span>';
+    const face=x=>`<div class="av sm" style="background:${x.color}">${AVI[x.i]}</div>`;
+    s+=`<div id="offer"><div class="ors">
+      <div class="orow get"><div class="who">${mineOffer?'\u{1F465}':face(from)}</div><span class="arr down">\u2b07</span><div class="cards">${show(inc)}</div></div>
+      <div class="orow give"><div class="who">${me===null?face(from):face(G.players[me])}</div><span class="arr up">\u2b06</span><div class="cards">${show(out)}</div></div>
+    </div><div class="obtn">`;
+    if(me===null)s+=G.players.filter(o=>o.i!==t.from&&!(t.no||[]).includes(o.i)).map(o=>`<button class="ok" ${canPay(o,t.get)?'':'disabled'} onclick="act('accept',${o.i})" title="${esc(o.name)} accepts">${AVI[o.i]}\u2714</button>`).join('')+`<button class="no" onclick="act('cancelTrade')" title="Withdraw">\u2716</button>`;
+    else if(mineOffer)s+=`<span class="note">${(t.no||[]).length?(t.no||[]).map(i=>AVI[i]).join('')+' declined':'waiting\u2026'}</span><button class="no" onclick="act('cancelTrade')" title="Withdraw">\u2716</button>`;
+    else if((t.no||[]).includes(me))s+=`<span class="note">declined</span>`;
+    else s+=`<button class="ok" ${canPay(viewer,t.get)?'':'disabled'} onclick="act('accept',${me})" title="Accept">\u2714</button><button class="no" onclick="act('declineTrade',${me})" title="Decline">\u2716</button>`;
+    s+=`</div></div>`;
+  }
+  if(tradeOpen&&myTurn()&&!G.prompt&&G.winner===null){
+    const p=me===null?P():G.players[me],deal=bankDeal(),any=RES.some(r=>tGive[r])||RES.some(r=>tGet[r]);
+    s+=`<div id="tradePanel"><div class="rows">
+      <div class="trow"><div class="who" title="Bank">\u{1F3E6}</div>${RES.map(r=>`<div class="card sm ${G.bank[r]?'pickable':'off'}" style="--c:${CARD[r]}" ${G.bank[r]?`onclick="tAdd('get','${r}',1)"`:''} title="ask for ${r} \u2014 bank rate ${rate(p,r)}:1">${ICON[r]}${G.opts.hideBank?'':`<span class="n">${G.bank[r]}</span>`}</div>`).join('')}</div>
+      <div class="trow get"><div class="who">\u{1F465}</div><span class="arr down">\u2b07</span><div class="cards">${tCards(tGet,'get')||'<span class="none">click a card above to ask for it</span>'}</div></div>
+      <div class="trow give"><div class="who"><div class="av sm" style="background:${p.color}">${AVI[p.i]}</div></div><span class="arr up">\u2b06</span><div class="cards">${tCards(tGive,'give')||'<span class="none">click your cards below to offer them</span>'}</div></div>
+    </div><div class="tbtn">
+      <button class="ok" ${deal?'':'disabled'} onclick="doTradeBank()" title="${deal?'Trade at your best rate':'Put exactly your bank/port rate of one resource against 1 of another'}">\u{1F3E6}\u2714</button>
+      <button class="ok" ${any&&!G.trade?'':'disabled'} onclick="doTradeOffer()" title="Offer this trade to the other players">\u{1F465}\u2714</button>
+      <button class="no" onclick="closeTrade()" title="Close">\u2716</button>
+    </div></div>`;
+  }
+  $('overlay').innerHTML=s;
+}
 function disc(r,d){const q=G.players[G.prompt.p],nv=discSel[r]+d;if(nv<0||nv>q.res[r]||count({res:discSel})+d>Math.floor(count(q)/2))return;discSel[r]=nv;render()}
 // state-driven modals: shown to whoever the state says must act
 function statsHTML(){
   const st=G.stats,secs=Math.max(0,Math.round(((st.end||Date.now())-st.start)/1000)),max=Math.max(1,...st.rolls);
   let h=`<h3>📊 ${st.turns} turns · ${Math.floor(secs/60)}m ${secs%60}s</h3><div style="overflow-x:auto"><table class="stats"><tr><th></th><th>VP</th><th>breakdown</th><th title="Resources produced">🎴+</th><th title="Cards robbed">🥷</th><th title="Cards discarded">🗑️</th><th title="Trades">🤝</th><th title="Dev cards bought">🃏</th><th title="Knights played">⚔️</th><th title="Longest road">🛣️</th></tr>`;
   G.players.forEach(p=>{const s=st.p[p.i],b=[5-p.settles,2*(4-p.cities),G.longest.p===p.i?2:0,G.army.p===p.i?2:0,p.vpc];
-    h+=`<tr${G.winner===p.i?' class="w"':''}><td style="text-align:left">${AVI[p.i]} ${pn(p)}</td><td><b>${vp(p.i)}</b></td><td style="font-size:11px;white-space:nowrap">🏠${b[0]} 🏰${b[1]} 🛣️${b[2]} ⚔️${b[3]} 🏆${b[4]}</td><td>${s.gained}</td><td>${s.lost}</td><td>${s.discarded}</td><td>${s.trades}</td><td>${s.dev}</td><td>${p.knights}</td><td>${longestRoad(p.i)}</td></tr>`});
+    h+=`<tr${G.winner===p.i?' class="w"':''}><td style="text-align:left">${pn(p)}</td><td><b>${vp(p.i)}</b></td><td style="font-size:11px;white-space:nowrap">🏠${b[0]} 🏰${b[1]} 🛣️${b[2]} ⚔️${b[3]} 🏆${b[4]}</td><td>${s.gained}</td><td>${s.lost}</td><td>${s.discarded}</td><td>${s.trades}</td><td>${s.dev}</td><td>${p.knights}</td><td>${longestRoad(p.i)}</td></tr>`});
   h+=`</table></div><div class="hist">`+[2,3,4,5,6,7,8,9,10,11,12].map(n=>`<div><b>${st.rolls[n]}</b><i style="height:${Math.round(st.rolls[n]/max*56)+2}px;background:${n===6||n===8?'#c62828':n===7?'#555':'#2b7fd6'}"></i><span>${n}</span></div>`).join('')+`</div><div style="font-size:11px;text-align:center;color:#666">dice roll distribution</div>`;
   return h;
 }
@@ -600,14 +730,6 @@ function stateModal(){
     if(pr.t==='steal')return ['steal','<h3>Steal from</h3>'+pr.victims.map(o=>`<button onclick="act('steal',${o})">${esc(G.players[o].name)} (${count(G.players[o])} cards)</button>`).join('')];
     if(pr.t==='plenty')return ['plenty'+pr.n,`<h3>Year of Plenty: pick ${pr.n} more</h3>`+RES.map(r=>`<button ${G.bank[r]?'':'disabled'} onclick="act('plenty','${r}')">${ICON[r]} ${r}</button>`).join('')];
     if(pr.t==='mono')return ['mono','<h3>Monopoly: choose a resource</h3>'+RES.map(r=>`<button onclick="act('mono','${r}')">${ICON[r]} ${r}</button>`).join('')];
-  }
-  const t=G.trade;
-  if(t&&declined!==t.id){
-    const from=G.players[t.from],txt=o=>RES.filter(r=>o[r]).map(r=>ICON[r].repeat(o[r])).join(' ')||'nothing';
-    let h=`<h3>${pn(from)} offers ${txt(t.give)} for ${txt(t.get)}</h3>`;
-    h+=G.players.filter(o=>o.i!==t.from&&isMe(o.i)).map(o=>`<div>${pn(o)}: <button ${canPay(o,t.get)?'':'disabled'} onclick="act('accept',${o.i})">Accept</button></div>`).join('');
-    h+=isMe(t.from)?`<button onclick="act('cancelTrade')">Cancel offer</button>`:`<button onclick="declined=${t.id};render()">Decline</button>`;
-    return ['trade'+t.id,h];
   }
   return null;
 }
@@ -630,6 +752,7 @@ function snd(n){
   SFX[n]();
 }
 document.addEventListener('pointerdown',()=>{if(AC&&AC.state==='suspended')AC.resume()});
+function sendChat(){const i=$('chatin');if(!i)return;const v=i.value.trim();i.value='';chatDraft='';if(v)act('chat',me===null?G.cur:me,v)}
 function toggleMute(){muted=!muted;localStorage.catanMute=muted?'1':'0';render()}
 function sounds(){
   const s={id:G.id,dice:G.dice?G.cur+'-'+G.dice.join(''):'',cur:G.cur,trade:G.trade?G.trade.id:0,winner:G.winner,robber:G.robber,
@@ -647,8 +770,8 @@ function sounds(){
 function render(){
   if(!G)return;
   sounds();
-  if(G.cur!==lastCur){lastCur=G.cur;turnStart=Date.now()}
-  renderBoard();renderSide();renderBottom();
+  if(G.cur!==lastCur){lastCur=G.cur;turnStart=Date.now();tradeOpen=false;tGive={};tGet={}}
+  renderBoard();renderSide();renderBottom();renderTrade();
   const sm=stateModal(),key=sm?sm[0]:null;
   if(key!==modalKey){modalKey=key;if(key&&key.startsWith('discard'))discSel={wood:0,brick:0,sheep:0,wheat:0,ore:0};if(sm)modal(sm[1]);else closeModal()}
   else if(sm)modal(sm[1]);
@@ -708,6 +831,8 @@ function demo(){ // #demo: auto-play a few turns for a quick look at the board
     endTurn();
   }
   roll();P().dev=['knight','road'];render();
+  if(location.hash==='#demotrade'){const q=P();q.res.brick=3;q.res.wheat=2;q.res.ore=1;chatOpen=true;G.chat.push({i:1,n:G.players[1].name,c:G.players[1].color,m:'anyone got wheat?'},{i:0,n:G.players[0].name,c:G.players[0].color,m:'trade you for ore'});toggleTrade();tAdd('get','sheep',1);tAdd('give','brick',2);render()}
+  if(location.hash==='#demooffer'){const q=P();q.res.wheat=2;q.res.wood=2;propose({wheat:1},{wood:1});chatOpen=true;render()}
   if(location.hash==='#demowin'){P().vpc=9;P().res.wood++;P().res.brick++;setMode('road');clickE(first(G.edges,e=>validRoad(e,G.cur,false)).id)}
 }
 location.hash==='#test'?selfTest():location.hash.startsWith('#demo')?demo():renderLobby();
